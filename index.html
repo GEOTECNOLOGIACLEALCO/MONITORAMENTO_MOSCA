@@ -22,6 +22,12 @@
       margin: 0;
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent !important;
+    }
+
+    path:focus, svg:focus, .leaflet-container *:focus, .leaflet-interactive:focus {
+      outline: none !important;
+      box-shadow: none !important;
     }
 
     body, html {
@@ -993,23 +999,16 @@
       attribution: 'OSM'
     });
 
-    // 2. Perímetros das Fazendas
+    // 2. Perímetros das Fazendas (referência visual de fundo)
     if (typeof DADOS_PERIMETROS !== 'undefined') {
       const layerPerimetros = L.geoJSON(DADOS_PERIMETROS, {
+        interactive: false,
         style: {
           color: '#f59e0b',
           weight: 1.5,
           opacity: 0.8,
           fillColor: '#fbbf24',
           fillOpacity: 0.08
-        },
-        onEachFeature: (feature, layer) => {
-          if (feature.properties && feature.properties.nome) {
-            layer.bindTooltip(`<b>${feature.properties.nome}</b><br>FA: ${feature.properties.fazenda || '-'}`, {
-              sticky: true,
-              direction: 'center'
-            });
-          }
         }
       }).addTo(map);
 
