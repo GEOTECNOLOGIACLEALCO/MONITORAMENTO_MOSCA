@@ -13,13 +13,15 @@ echo.
 echo   [1] Abrir Mapa de Coleta no Navegador (index.html)
 echo   [2] Baixar Relatorio de Coletas em Excel (Coletas_Monitoramento_Mosca.xlsx)
 echo   [3] Atualizar Base do Mapa (Processar novos shapefiles para o mapa web)
+echo   [4] Publicar Alteracoes no GitHub (Atualizar App do Celular)
 echo   [0] Sair
 echo.
 echo ================================================================================
 echo.
-choice /C 1230 /N /M "Pressione 1, 2, 3 ou 0: "
+choice /C 12340 /N /M "Pressione 1, 2, 3, 4 ou 0: "
 
-if errorlevel 4 goto OP_SAIR
+if errorlevel 5 goto OP_SAIR
+if errorlevel 4 goto OP_GITHUB
 if errorlevel 3 goto OP_UPDATE
 if errorlevel 2 goto OP_EXCEL
 if errorlevel 1 goto OP_OPEN_WEB
@@ -55,6 +57,28 @@ echo ===========================================================================
 echo.
 python atualizar_base_web.py
 echo.
+echo ================================================================================
+pause
+goto MENU
+
+:OP_GITHUB
+cls
+color 0B
+echo ================================================================================
+echo   [4] PUBLICANDO ATUALIZACOES NO GITHUB (APP DO CELULAR)...
+echo ================================================================================
+echo.
+echo -> Verificando arquivos alterados...
+git add -A
+git status -s
+echo.
+echo -> Enviando atualizacoes para o GitHub...
+git commit -m "Atualizacao do sistema e base geografica" > nul 2>&1
+git push origin main
+echo.
+echo ================================================================================
+echo   [CONCLUIDO] Projeto sincronizado com o GitHub com sucesso!
+echo   Basta tocar em 'Atualizar' no celular para carregar as mudancas.
 echo ================================================================================
 pause
 goto MENU
