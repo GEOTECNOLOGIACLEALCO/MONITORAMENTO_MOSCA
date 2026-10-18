@@ -1,0 +1,11 @@
+﻿# Planilhas locais de dados de coletas
+*.xlsx
+~$*.xlsx
+
+# Python
+__pycache__/
+*.pyc
+
+# IDEs
+.vscode/
+.idea/

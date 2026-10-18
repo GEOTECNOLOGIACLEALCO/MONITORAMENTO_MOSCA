@@ -1,0 +1,64 @@
+================================================================================
+           CLEALCO - SISTEMA DE MONITORAMENTO DE MOSCA (100% WEB)
+================================================================================
+
+Este projeto funciona de forma 100% Web: coleta georreferenciada no campo,
+armazenamento em nuvem no KoboToolbox e exportação direta de relatórios em Excel.
+
+Qualquer pessoa da equipe pode operar o sistema com facilidade:
+
+--------------------------------------------------------------------------------
+1. COMO COLETAR OS DADOS NO CAMPO
+--------------------------------------------------------------------------------
+Existem duas formas fáceis:
+
+Opção A (Pelo Computador ou Celular via Aplicação Web):
+- Abra o painel "MENU_MONITORAMENTO.bat" e aperte [1] (ou abra "index.html").
+- O mapa exibirá a imagem de satélite, os perímetros das fazendas e os 78 pontos.
+- Clique em qualquer ponto vermelho no mapa e clique em "Coletar Neste Ponto".
+- O formulário abrirá com o Ponto e a Fazenda já preenchidos.
+- Preencha a Data, selecione a Pressão (Baixo, Médio, Alto), a quantidade de larvas
+  e a sua Matrícula.
+- Clique em "Finalizar Coleta". O ponto ficará verde no mapa (concluído) e a hora
+  será gravada automaticamente no horário oficial de Brasília.
+
+Opção B (Pelo Link Direto no Navegador do Celular):
+- Abra no celular o link oficial:
+  https://ee.kobotoolbox.org/single/aHhcfXhL
+- Preencha a ficha e clique em Enviar.
+
+
+--------------------------------------------------------------------------------
+2. COMO BAIXAR A PLANILHA DE COLETAS EM EXCEL
+--------------------------------------------------------------------------------
+- Abra o arquivo: "MENU_MONITORAMENTO.bat"
+- Pressione a tecla [2] no teclado.
+- O sistema conecta à nuvem do KoboToolbox e gera instantaneamente o arquivo:
+  👉 "Coletas_Monitoramento_Mosca.xlsx"
+  (Contendo: Data, Hora em Brasília, Ponto, Fazenda, Pressão, Larvas, Matrícula e GPS).
+
+
+--------------------------------------------------------------------------------
+3. COMO ATUALIZAR AS BASES NO FUTURO (SE MUDAR FAZENDAS OU PONTOS)
+--------------------------------------------------------------------------------
+Se no futuro houver novas fazendas ou novos pontos de monitoramento:
+1. Substitua os shapefiles na pasta "SHP\" ("PERIMETRO_FAZENDAS.shp" e "Pontos_Monitoramento_Mosca.shp").
+2. Abra o "MENU_MONITORAMENTO.bat" e pressione a tecla [3].
+3. O script atualiza automaticamente o mapa web ("dados_mapa.js").
+
+
+--------------------------------------------------------------------------------
+ESTRUTURA DE PASTAS E ARQUIVOS:
+--------------------------------------------------------------------------------
+📁 SHP\                             -> Shapefiles mestres (Fazendas e Pontos)
+📄 MENU_MONITORAMENTO.bat           -> Painel interativo de 2 cliques
+📄 index.html                       -> Aplicação web de coleta com satélite e GPS
+📄 dados_mapa.js                    -> Base geográfica leve da aplicação web
+📄 Coletas_Monitoramento_Mosca.xlsx -> Planilha Excel com os dados descarregados
+📄 baixar_planilha_coletas.py       -> Motor que puxa as coletas para o Excel
+📄 atualizar_base_web.py            -> Motor que processa novos shapefiles para a web
+📄 LEIA-ME_MANUAL_DO_USUARIO.txt   -> Este manual de instruções
+
+================================================================================
+Desenvolvido para a Clealco - Sistema 100% Web de Monitoramento
+================================================================================

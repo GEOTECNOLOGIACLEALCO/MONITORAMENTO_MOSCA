@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Clealco | Monitoramento de Mosca dos Estábulos</title>
+  
+  <meta name="theme-color" content="#1b4332">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Clealco Mosca">
+  <link rel="icon" type="image/png" href="logo clealco.png">
+  <link rel="apple-touch-icon" href="logo clealco.png">
+  
+  <!-- Leaflet CSS & FontAwesome -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0f172a;
+    }
+
+    #app-container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Topbar */
+    header {
+      background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
+      color: white;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      z-index: 1000;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      background: #52b788;
+      color: #081c15;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .brand-title h1 {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-title p {
+      font-size: 11px;
+      color: #d8f3dc;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: #52b788;
+      color: #081c15;
+    }
+    .btn-primary:hover {
+      background: #74c69d;
+    }
+
+    /* GPS Status Bar */
+    #gps-bar {
+      background: #0f172a;
+      color: #94a3b8;
+      font-size: 11px;
+      padding: 6px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 999;
+    }
+
+    .gps-active {
+      color: #4ade80 !important;
+      font-weight: 600;
+    }
+
+    /* Map container */
+    #map {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Floating Buttons */
+    /* Floating Buttons */
+    .fab-group {
+      position: absolute;
+      bottom: 22px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .fab-btn {
+      background: linear-gradient(135deg, #2d6a4f, #1b4332);
+      color: #ffffff;
+      padding: 13px 20px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 700;
+      border: 2px solid #52b788;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .fab-btn:hover {
+      background: linear-gradient(135deg, #367d5e, #22533e);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+    .fab-btn:active {
+      transform: scale(0.96);
+    }
+
+    .fab-gps {
+      position: absolute;
+      bottom: 84px;
+      right: 20px;
+      z-index: 1000;
+      background: white;
+      color: #1e293b;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .fab-gps:hover {
+      background: #f8fafc;
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 600px) {
+      .fab-group {
+        bottom: 16px;
+        right: 12px;
+        left: 12px;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+      .fab-btn {
+        padding: 11px 14px;
+        font-size: 13px;
+        gap: 6px;
+      }
+      .fab-gps {
+        bottom: 74px;
+        right: 12px;
+      }
+    }
+
+    /* Filter Drawer Styling */
+    #filter-drawer {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 100%;
+      max-width: 480px;
+      height: 100%;
+      background: #ffffff;
+      z-index: 2000;
+      box-shadow: -6px 0 24px rgba(0, 0, 0, 0.35);
+      transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+    }
+    #filter-drawer.open {
+      right: 0;
+    }
+
+    .filter-search-container {
+      padding: 16px 20px 12px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-box i.search-icon {
+      position: absolute;
+      left: 14px;
+      color: #64748b;
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 12px 38px 12px 38px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 14px;
+      color: #0f172a;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .search-box input:focus {
+      border-color: #2d6a4f;
+      box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.15);
+    }
+
+    .btn-clear-search {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      font-size: 18px;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+    }
+    .btn-clear-search:hover {
+      color: #334155;
+    }
+
+    .filter-count-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    .filter-results-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #f1f5f9;
+    }
+
+    .ponto-card {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .ponto-card:hover {
+      border-color: #52b788;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      transform: translateY(-1px);
+    }
+
+    .ponto-card-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .ponto-card-num {
+      background: linear-gradient(135deg, #1b4332, #2d6a4f);
+      color: #52b788;
+      font-weight: 800;
+      font-size: 13px;
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .ponto-card-details {
+      min-width: 0;
+    }
+
+    .ponto-card-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ponto-card-sub {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ponto-card-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .btn-card-map {
+      background: #e2e8f0;
+      color: #1e293b;
+      border: none;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+    .btn-card-map:hover {
+      background: #2d6a4f;
+      color: white;
+    }
+
+    .btn-card-coletar {
+      background: #1b4332;
+      color: #ffffff;
+      border: 1px solid #52b788;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+    .btn-card-coletar:hover {
+      background: #2d6a4f;
+    }
+
+    /* Native Form Drawer */
+    #form-drawer {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 100%;
+      max-width: 480px;
+      height: 100%;
+      background: #ffffff;
+      z-index: 2000;
+      box-shadow: -6px 0 24px rgba(0, 0, 0, 0.35);
+      transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    #form-drawer.open {
+      right: 0;
+    }
+
+    .drawer-header {
+      background: linear-gradient(135deg, #1b4332, #2d6a4f);
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .drawer-header h2 {
+      font-size: 17px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .drawer-close {
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 26px;
+      cursor: pointer;
+      padding: 4px 8px;
+      line-height: 1;
+    }
+
+    .drawer-body {
+      padding: 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Form Fields Styling */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .form-group label .req {
+      color: #dc2626;
+      font-weight: bold;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #0f172a;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: #2d6a4f;
+      box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.15);
+    }
+
+    .form-control[readonly] {
+      background: #f1f5f9;
+      color: #334155;
+      font-weight: 600;
+    }
+
+    /* Pressure Selector Buttons */
+    .pressure-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .pressure-btn {
+      padding: 12px 6px;
+      border-radius: 8px;
+      border: 2px solid #cbd5e1;
+      background: #f8fafc;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .pressure-btn.baixo { color: #15803d; }
+    .pressure-btn.medio { color: #c2410c; }
+    .pressure-btn.alto  { color: #b91c1c; }
+
+    .pressure-btn.active.baixo {
+      background: #dcfce7;
+      border-color: #15803d;
+      box-shadow: 0 0 0 2px rgba(21, 128, 61, 0.3);
+    }
+    .pressure-btn.active.medio {
+      background: #ffedd5;
+      border-color: #c2410c;
+      box-shadow: 0 0 0 2px rgba(194, 65, 12, 0.3);
+    }
+    .pressure-btn.active.alto {
+      background: #fee2e2;
+      border-color: #b91c1c;
+      box-shadow: 0 0 0 2px rgba(185, 28, 28, 0.3);
+    }
+
+    /* Counter Stepper */
+    .stepper {
+      display: flex;
+      align-items: center;
+    }
+
+    .stepper-btn {
+      width: 48px;
+      height: 44px;
+      background: #e2e8f0;
+      border: 1px solid #cbd5e1;
+      font-size: 18px;
+      font-weight: bold;
+      color: #1e293b;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .stepper-btn:first-child { border-radius: 8px 0 0 8px; }
+    .stepper-btn:last-child { border-radius: 0 8px 8px 0; }
+
+    .stepper-input {
+      flex: 1;
+      height: 44px;
+      text-align: center;
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    /* Time badge */
+    .time-info {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #475569;
+    }
+    .time-clock {
+      font-family: monospace;
+      font-weight: 700;
+      color: #1b4332;
+      font-size: 15px;
+    }
+
+    /* GPS Coordinates Box */
+    .gps-box {
+      background: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .gps-box-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      color: #334155;
+    }
+    .gps-box-coords {
+      font-family: monospace;
+      font-size: 12px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .btn-gps-refresh {
+      background: #e2e8f0;
+      border: 1px solid #cbd5e1;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #1e293b;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.2s;
+    }
+    .btn-gps-refresh:hover {
+      background: #cbd5e1;
+    }
+
+    /* Submit Button */
+    .btn-submit-coleta {
+      background: linear-gradient(135deg, #2d6a4f, #1b4332);
+      color: white;
+      padding: 16px;
+      border-radius: 10px;
+      border: none;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 12px rgba(27, 67, 50, 0.3);
+      margin-top: 10px;
+      transition: all 0.2s;
+    }
+    .btn-submit-coleta:hover {
+      background: #1b4332;
+      box-shadow: 0 6px 16px rgba(27, 67, 50, 0.4);
+    }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: #0f172a;
+      color: white;
+      padding: 14px 24px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 3000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+    #toast.success { background: #166534; border: 1.5px solid #4ade80; }
+    #toast.error { background: #991b1b; border: 1.5px solid #f87171; }
+
+    /* Custom Popup Styling */
+    .leaflet-popup-content-wrapper {
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      padding: 0;
+      overflow: hidden;
+    }
+    .leaflet-popup-content {
+      margin: 0;
+      line-height: 1.4;
+    }
+    .point-card-header {
+      background: #1b4332;
+      color: white;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .point-card-body {
+      padding: 12px 14px;
+      font-size: 13px;
+      color: #334155;
+    }
+    .point-card-body p {
+      margin-bottom: 6px;
+    }
+    .point-card-body strong {
+      color: #0f172a;
+    }
+    .btn-collect-point {
+      width: 100%;
+      margin-top: 10px;
+      background: #2d6a4f;
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-collect-point:hover {
+      background: #1b4332;
+    }
+
+    /* User Marker */
+    .user-marker {
+      width: 16px;
+      height: 16px;
+      background: #2563eb;
+      border: 3px solid white;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(37, 99, 235, 0.8);
+      position: relative;
+    }
+    .user-marker::after {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      width: 36px;
+      height: 36px;
+      background: rgba(37, 99, 235, 0.3);
+      border-radius: 50%;
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.6); opacity: 1; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app-container">
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <div class="brand-icon">
+          <i class="fa-solid fa-mosquito"></i>
+        </div>
+        <div class="brand-title">
+          <h1>Clealco Mosca</h1>
+          <p>Monitoramento & Coleta de Campo</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- GPS Info Bar -->
+    <div id="gps-bar">
+      <span id="gps-text"><i class="fa-solid fa-location-crosshairs"></i> Aguardando sinal de GPS...</span>
+      <span id="nearest-point"></span>
+    </div>
+
+    <!-- Map -->
+    <div id="map"></div>
+
+    <!-- Floating Buttons -->
+    <button class="fab-gps" title="Centralizar na Minha Posição" onclick="centralizarGPS()">
+      <i class="fa-solid fa-crosshairs"></i>
+    </button>
+    <div class="fab-group">
+      <button class="fab-btn" onclick="abrirFiltroPontos()">
+        <i class="fa-solid fa-magnifying-glass"></i> Filtrar Ponto
+      </button>
+      <button class="fab-btn" onclick="abrirColetaLivre()">
+        <i class="fa-solid fa-clipboard-check"></i> Nova Coleta
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter Drawer -->
+  <div id="filter-drawer">
+    <div class="drawer-header">
+      <h2><i class="fa-solid fa-magnifying-glass"></i> Localizar Ponto</h2>
+      <button class="drawer-close" onclick="fecharFiltro()">&times;</button>
+    </div>
+    <div class="filter-search-container">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="filtro-busca-input" placeholder="Buscar por número, proprietário ou fazenda..." oninput="filtrarListaPontos()" autocomplete="off" />
+        <button type="button" class="btn-clear-search" id="btn-limpar-busca" onclick="limparBuscaPontos()" style="display:none;">&times;</button>
+      </div>
+      <div class="filter-count-bar">
+        <span id="filtro-count-label">Carregando pontos...</span>
+      </div>
+    </div>
+    <div class="filter-results-list" id="filtro-lista-pontos">
+      <!-- Inserido dinamicamente via JS -->
+    </div>
+  </div>
+
+  <!-- Native Form Drawer -->
+  <div id="form-drawer">
+    <div class="drawer-header">
+      <h2><i class="fa-solid fa-pen-to-square"></i> Ficha de Monitoramento</h2>
+      <button class="drawer-close" onclick="fecharFormulario()">&times;</button>
+    </div>
+    
+    <form id="coleta-form" class="drawer-body" onsubmit="salvarColeta(event)">
+      <!-- Ponto de Referência -->
+      <div class="form-group">
+        <label>Ponto de Referência (Propriedade / Armadilha) <span class="req">*</span></label>
+        <input type="text" id="campo-ponto" class="form-control" readonly required />
+        <input type="hidden" id="campo-ponto-id" />
+        <input type="hidden" id="campo-lat" />
+        <input type="hidden" id="campo-lon" />
+      </div>
+
+      <!-- Coordenadas GPS -->
+      <div class="gps-box" id="gps-box-container">
+        <div class="gps-box-header">
+          <span><i class="fa-solid fa-location-crosshairs"></i> Localização GPS:</span>
+          <button type="button" class="btn-gps-refresh" onclick="capturarGpsAoVivo(true)" title="Recapturar coordenadas do GPS">
+            <i class="fa-solid fa-arrows-rotate"></i> Atualizar GPS
+          </button>
+        </div>
+        <div class="gps-box-coords" id="gps-box-texto">
+          <i class="fa-solid fa-spinner fa-spin"></i> Aguardando sinal de GPS...
+        </div>
+      </div>
+
+      <!-- FA -->
+      <div class="form-group">
+        <label>FA (Fazenda / Código) <span class="req">*</span></label>
+        <input type="text" id="campo-fa" class="form-control" required placeholder="Código FA ou Nome da Fazenda" />
+      </div>
+
+      <!-- Data da Coleta -->
+      <div class="form-group">
+        <label>Data da Coleta <span class="req">*</span></label>
+        <input type="date" id="campo-data" class="form-control" required />
+      </div>
+
+      <!-- Pressão da Mosca -->
+      <div class="form-group">
+        <label>Pressão da Mosca <span class="req">*</span></label>
+        <div class="pressure-options">
+          <button type="button" class="pressure-btn baixo" onclick="selecionarPressao('Baixo')">
+            <i class="fa-solid fa-shield-halved"></i> Baixo
+          </button>
+          <button type="button" class="pressure-btn medio" onclick="selecionarPressao('Medio')">
+            <i class="fa-solid fa-triangle-exclamation"></i> Médio
+          </button>
+          <button type="button" class="pressure-btn alto" onclick="selecionarPressao('Alto')">
+            <i class="fa-solid fa-circle-exclamation"></i> Alto
+          </button>
+        </div>
+        <input type="hidden" id="campo-pressao" required />
+      </div>
+
+      <!-- Quantidade / Larva -->
+      <div class="form-group">
+        <label>Qtd / Larva <span class="req">*</span></label>
+        <div class="stepper">
+          <button type="button" class="stepper-btn" onclick="ajustarLarva(-1)">-</button>
+          <input type="number" id="campo-larva" class="form-control stepper-input" value="0" min="0" required />
+          <button type="button" class="stepper-btn" onclick="ajustarLarva(1)">+</button>
+        </div>
+      </div>
+
+      <!-- Matrícula -->
+      <div class="form-group">
+        <label>Matrícula do Técnico <span class="req">*</span></label>
+        <input type="text" id="campo-matricula" class="form-control" required placeholder="Digite sua matrícula (obrigatório)" />
+      </div>
+
+      <!-- Hora Automática -->
+      <div class="time-info">
+        <span><i class="fa-regular fa-clock"></i> Hora do Lançamento:</span>
+        <span class="time-clock" id="relogio-ao-vivo">--:--:--</span>
+      </div>
+
+      <!-- Botão Salvar -->
+      <button type="submit" class="btn-submit-coleta" id="btn-submit">
+        <i class="fa-solid fa-paper-plane"></i> Finalizar Coleta
+      </button>
+    </form>
+  </div>
+
+  <!-- Toast Message -->
+  <div id="toast"></div>
+
+  <!-- Hidden Iframe for CORS-free submission if needed -->
+  <iframe name="kobo-submission-frame" style="display:none;"></iframe>
+
+  <!-- Leaflet JS & Map Data -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="dados_mapa.js"></script>
+
+  <script>
+    const ASSET_UID = "aWa7hibK6XamM3jmd9R737";
+    const KOBO_SUBMISSION_URL = "https://kc.kobotoolbox.org/monitoramento_clealco/submission";
+
+    let userLat = null, userLon = null, userAcc = null;
+    let userMarker = null, userAccCircle = null;
+    let markersLayer = null;
+
+    // Relógio em tempo real
+    setInterval(() => {
+      const now = new Date();
+      const horaStr = now.toLocaleTimeString('pt-BR');
+      const el = document.getElementById("relogio-ao-vivo");
+      if (el) el.innerText = horaStr;
+    }, 1000);
+
+    // 1. Inicializar Mapa Leaflet
+    const map = L.map('map', {
+      zoomControl: false,
+      maxZoom: 19
+    }).setView([-21.365, -50.456], 12);
+
+    L.control.zoom({ position: 'topright' }).addTo(map);
+
+    // Camadas Base
+    const satGoogle = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+      maxZoom: 20,
+      attribution: 'Google Hybrid'
+    }).addTo(map);
+
+    const satEsri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      attribution: 'Esri Satellite'
+    });
+
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: 'OSM'
+    });
+
+    // 2. Perímetros das Fazendas
+    if (typeof DADOS_PERIMETROS !== 'undefined') {
+      const layerPerimetros = L.geoJSON(DADOS_PERIMETROS, {
+        style: {
+          color: '#f59e0b',
+          weight: 1.5,
+          opacity: 0.8,
+          fillColor: '#fbbf24',
+          fillOpacity: 0.08
+        },
+        onEachFeature: (feature, layer) => {
+          if (feature.properties && feature.properties.nome) {
+            layer.bindTooltip(`<b>${feature.properties.nome}</b><br>FA: ${feature.properties.fazenda || '-'}`, {
+              sticky: true,
+              direction: 'center'
+            });
+          }
+        }
+      }).addTo(map);
+
+      try {
+        map.fitBounds(layerPerimetros.getBounds());
+      } catch (e) {}
+    }
+
+    // 3. Pontos de Monitoramento (78 pontos)
+    const pontosLayersMap = {};
+    let listaPontosCache = [];
+
+    if (typeof DADOS_PONTOS !== 'undefined' && DADOS_PONTOS.features) {
+      listaPontosCache = DADOS_PONTOS.features.map(f => {
+        const p = f.properties;
+        const nomePonto = p.nome_ponto || `${p.id} - ${p.proprietario || 'Sem Nome'}`;
+        const fazendaNome = (p.propriedade && p.propriedade !== 'nan' && p.propriedade.trim() !== '') ? p.propriedade.trim() : (p.regiao && p.regiao !== 'nan' ? p.regiao.trim() : '-');
+        return {
+          id: p.id,
+          nome: nomePonto,
+          proprietario: p.proprietario || '',
+          fazenda: fazendaNome,
+          regiao: p.regiao || 'Clealco',
+          lat: p.lat,
+          lon: p.lon
+        };
+      });
+      listaPontosCache.sort((a, b) => a.id - b.id);
+
+      markersLayer = L.geoJSON(DADOS_PONTOS, {
+        pointToLayer: (feature, latlng) => {
+          return L.circleMarker(latlng, {
+            radius: 8,
+            fillColor: '#ef4444',
+            color: '#ffffff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.95
+          });
+        },
+        onEachFeature: (feature, layer) => {
+          const p = feature.properties;
+          pontosLayersMap[p.id] = layer;
+          const nomePonto = p.nome_ponto || `${p.id} - ${p.proprietario || 'Sem Nome'}`;
+          const fazendaNome = (p.propriedade && p.propriedade !== 'nan' && p.propriedade.trim() !== '') ? p.propriedade.trim() : (p.regiao && p.regiao !== 'nan' ? p.regiao.trim() : '-');
+          const content = `
+            <div class="point-card-header">
+              <span><i class="fa-solid fa-location-dot"></i> ${nomePonto}</span>
+              <span style="font-size:11px; opacity:0.85; max-width:140px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${p.regiao || 'Clealco'}</span>
+            </div>
+            <div class="point-card-body">
+              <p><strong>Ponto:</strong> ${nomePonto}</p>
+              <p><strong>Fazenda:</strong> ${fazendaNome}</p>
+              <p><strong>Proprietário:</strong> ${p.proprietario || '-'}</p>
+              <p><strong>Coordenadas:</strong> ${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}</p>
+              <button class="btn-collect-point" onclick="abrirColetaPonto(${p.id})">
+                <i class="fa-solid fa-clipboard-check"></i> Coletar Neste Ponto
+              </button>
+            </div>
+          `;
+          layer.bindPopup(content);
+        }
+      }).addTo(map);
+    }
+
+    // Controle de Camadas
+    L.control.layers({
+      "Satélite Google": satGoogle,
+      "Satélite Esri": satEsri,
+      "Mapa OpenStreetMap": osm
+    }, null, { position: 'topleft' }).addTo(map);
+
+    // 4. GPS em Tempo Real
+    if ("geolocation" in navigator) {
+      navigator.geolocation.watchPosition(
+        (pos) => {
+          userLat = pos.coords.latitude;
+          userLon = pos.coords.longitude;
+          userAcc = Math.round(pos.coords.accuracy);
+
+          const gpsEl = document.getElementById("gps-text");
+          gpsEl.innerHTML = `<i class="fa-solid fa-circle-check gps-active"></i> GPS Ativo (Precisão: ${userAcc}m)`;
+          gpsEl.className = "gps-active";
+
+          const latlng = [userLat, userLon];
+          if (!userMarker) {
+            const icon = L.divIcon({
+              className: 'user-marker',
+              iconSize: [16, 16],
+              iconAnchor: [8, 8]
+            });
+            userMarker = L.marker(latlng, { icon: icon }).addTo(map);
+            userAccCircle = L.circle(latlng, {
+              radius: userAcc,
+              color: '#3b82f6',
+              weight: 1,
+              fillColor: '#60a5fa',
+              fillOpacity: 0.15
+            }).addTo(map);
+          } else {
+            userMarker.setLatLng(latlng);
+            userAccCircle.setLatLng(latlng);
+            userAccCircle.setRadius(userAcc);
+          }
+
+          calcularPontoMaisProximo(userLat, userLon);
+        },
+        (err) => {
+          document.getElementById("gps-text").innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> GPS desligado ou sem permissão`;
+        },
+        { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+      );
+    }
+
+    function centralizarGPS() {
+      if (userLat && userLon) {
+        map.setView([userLat, userLon], 16);
+      } else {
+        showToast("Aguardando coordenadas do GPS...", "error");
+      }
+    }
+
+    function calcularPontoMaisProximo(lat, lon) {
+      if (typeof DADOS_PONTOS === 'undefined') return;
+      let minDesc = Infinity;
+      let closest = null;
+      DADOS_PONTOS.features.forEach(f => {
+        const d = map.distance([lat, lon], [f.geometry.coordinates[1], f.geometry.coordinates[0]]);
+        if (d < minDesc) {
+          minDesc = d;
+          closest = f.properties;
+        }
+      });
+      if (closest && minDesc < 5000) {
+        document.getElementById("nearest-point").innerText = `Próximo: ${closest.nome_ponto || closest.id} (${Math.round(minDesc)}m)`;
+      }
+    }
+
+    // 5. Funções do Formulário de Coleta
+    function preencherDataHoje() {
+      const hoje = new Date().toISOString().split('T')[0];
+      document.getElementById("campo-data").value = hoje;
+      // Recuperar matrícula salva
+      const salva = localStorage.getItem("clealco_matricula");
+      if (salva) {
+        document.getElementById("campo-matricula").value = salva;
+      }
+    }
+
+    function atualizarCoordenadasGpsForm(lat, lon, acc, rotuloExtra) {
+      const elLat = document.getElementById("campo-lat");
+      const elLon = document.getElementById("campo-lon");
+      const elTexto = document.getElementById("gps-box-texto");
+
+      if (lat && lon) {
+        elLat.value = lat;
+        elLon.value = lon;
+        const accText = acc ? ` (±${acc}m)` : '';
+        const extra = rotuloExtra ? ` [${rotuloExtra}]` : '';
+        elTexto.innerHTML = `<span style="color:#16a34a;"><i class="fa-solid fa-circle-check"></i> Lat: ${parseFloat(lat).toFixed(6)}, Lon: ${parseFloat(lon).toFixed(6)}${accText}${extra}</span>`;
+      } else {
+        elLat.value = "";
+        elLon.value = "";
+        elTexto.innerHTML = `<span style="color:#dc2626;"><i class="fa-solid fa-triangle-exclamation"></i> Aguardando sinal de GPS...</span>`;
+      }
+    }
+
+    function capturarGpsAoVivo(mostrarAviso = false) {
+      const elTexto = document.getElementById("gps-box-texto");
+      if (elTexto) {
+        elTexto.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Obtendo coordenadas GPS de alta precisão...`;
+      }
+
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            userLat = pos.coords.latitude;
+            userLon = pos.coords.longitude;
+            userAcc = Math.round(pos.coords.accuracy);
+            atualizarCoordenadasGpsForm(userLat, userLon, userAcc, "GPS Ao Vivo");
+            if (mostrarAviso) {
+              showToast(`🎯 GPS atualizado! Precisão: ${userAcc}m`, "success");
+            }
+          },
+          (err) => {
+            if (userLat && userLon) {
+              atualizarCoordenadasGpsForm(userLat, userLon, userAcc, "Último GPS Conhecido");
+            } else {
+              if (elTexto) {
+                elTexto.innerHTML = `<span style="color:#dc2626;"><i class="fa-solid fa-triangle-exclamation"></i> GPS indisponível ou sem permissão</span>`;
+              }
+            }
+            if (mostrarAviso) {
+              showToast("⚠️ Verifique se o GPS e a permissão de localização estão ativados.", "error");
+            }
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      } else {
+        if (elTexto) {
+          elTexto.innerHTML = `<span style="color:#dc2626;">Dispositivo sem suporte a geolocalização</span>`;
+        }
+      }
+    }
+
+    // 5. Funções de Busca e Filtro de Pontos
+    function abrirFiltroPontos() {
+      fecharFormulario();
+      const drawer = document.getElementById("filter-drawer");
+      drawer.classList.add("open");
+      const input = document.getElementById("filtro-busca-input");
+      if (input) {
+        input.value = "";
+        setTimeout(() => input.focus(), 250);
+      }
+      renderizarListaPontos(listaPontosCache);
+    }
+
+    function fecharFiltro() {
+      const drawer = document.getElementById("filter-drawer");
+      if (drawer) drawer.classList.remove("open");
+    }
+
+    function limparBuscaPontos() {
+      const input = document.getElementById("filtro-busca-input");
+      input.value = "";
+      filtrarListaPontos();
+      input.focus();
+    }
+
+    function filtrarListaPontos() {
+      const termo = (document.getElementById("filtro-busca-input").value || "").trim().toLowerCase();
+      const btnLimpar = document.getElementById("btn-limpar-busca");
+      if (btnLimpar) {
+        btnLimpar.style.display = termo ? "block" : "none";
+      }
+
+      if (!termo) {
+        renderizarListaPontos(listaPontosCache);
+        return;
+      }
+
+      const filtrados = listaPontosCache.filter(item => {
+        const idStr = String(item.id);
+        const nomeStr = (item.nome || "").toLowerCase();
+        const propStr = (item.proprietario || "").toLowerCase();
+        const fazStr = (item.fazenda || "").toLowerCase();
+        const regStr = (item.regiao || "").toLowerCase();
+
+        return idStr === termo ||
+               idStr.includes(termo) ||
+               nomeStr.includes(termo) ||
+               propStr.includes(termo) ||
+               fazStr.includes(termo) ||
+               regStr.includes(termo);
+      });
+
+      renderizarListaPontos(filtrados);
+    }
+
+    function renderizarListaPontos(pontos) {
+      const container = document.getElementById("filtro-lista-pontos");
+      const countLabel = document.getElementById("filtro-count-label");
+
+      if (countLabel) {
+        countLabel.innerHTML = `<span>Exibindo <b>${pontos.length}</b> de ${listaPontosCache.length} pontos</span>`;
+      }
+
+      if (!pontos || pontos.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center; padding: 40px 20px; color:#64748b;">
+            <i class="fa-solid fa-magnifying-glass" style="font-size:32px; opacity:0.35; margin-bottom:12px; display:block;"></i>
+            <p style="font-weight:700; color:#334155; margin-bottom:4px;">Nenhum ponto encontrado</p>
+            <p style="font-size:12px;">Tente pesquisar por outro número, proprietário ou fazenda.</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = "";
+      pontos.forEach(p => {
+        html += `
+          <div class="ponto-card" onclick="irParaPonto(${p.id})">
+            <div class="ponto-card-left">
+              <div class="ponto-card-num">#${p.id}</div>
+              <div class="ponto-card-details">
+                <div class="ponto-card-name">${escapeHtml(p.nome)}</div>
+                <div class="ponto-card-sub"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(p.fazenda)} • ${escapeHtml(p.regiao)}</div>
+              </div>
+            </div>
+            <div class="ponto-card-actions" onclick="event.stopPropagation()">
+              <button class="btn-card-map" onclick="irParaPonto(${p.id})" title="Localizar no mapa">
+                <i class="fa-solid fa-crosshairs"></i> Ver
+              </button>
+              <button class="btn-card-coletar" onclick="iniciarColetaDoFiltro(${p.id})" title="Registrar coleta neste ponto">
+                <i class="fa-solid fa-clipboard-check"></i> Coletar
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function irParaPonto(pontoId) {
+      fecharFiltro();
+      const p = listaPontosCache.find(x => x.id === pontoId);
+      if (p) {
+        map.flyTo([p.lat, p.lon], 17, { duration: 1.2 });
+        const layer = pontosLayersMap[pontoId];
+        if (layer) {
+          setTimeout(() => {
+            layer.openPopup();
+          }, 1200);
+        }
+      }
+    }
+
+    function iniciarColetaDoFiltro(pontoId) {
+      fecharFiltro();
+      abrirColetaPonto(pontoId);
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/[&<>"']/g, function(m) {
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#039;'
+        }[m];
+      });
+    }
+
+    // 6. Funções do Formulário de Coleta
+    function abrirColetaPonto(pontoId) {
+      fecharFiltro();
+      preencherDataHoje();
+      const feature = DADOS_PONTOS.features.find(f => f.properties.id === pontoId);
+      if (feature) {
+        const p = feature.properties;
+        const nomePonto = p.nome_ponto || `${p.id} - ${p.proprietario || 'Sem Nome'}`;
+        const fazendaNome = (p.propriedade && p.propriedade !== 'nan' && p.propriedade.trim() !== '') ? p.propriedade.trim() : (p.regiao && p.regiao !== 'nan' ? p.regiao.trim() : '');
+
+        document.getElementById("campo-ponto").value = nomePonto;
+        document.getElementById("campo-ponto-id").value = `ponto_${String(p.id).padStart(2, '0')}`;
+        document.getElementById("campo-fa").value = fazendaNome;
+        
+        atualizarCoordenadasGpsForm(p.lat, p.lon, null, `Ponto Cadastrado #${p.id}`);
+      }
+      document.getElementById("form-drawer").classList.add("open");
+    }
+
+    function abrirColetaLivre() {
+      fecharFiltro();
+      preencherDataHoje();
+      document.getElementById("campo-ponto").value = "Coleta Manual de Campo";
+      document.getElementById("campo-ponto-id").value = "outro_novo";
+      document.getElementById("campo-fa").value = "";
+      
+      // Se já temos a coordenada do GPS em tempo real, preenche de imediato
+      if (userLat && userLon) {
+        atualizarCoordenadasGpsForm(userLat, userLon, userAcc, "GPS Dispositivo");
+      } else {
+        atualizarCoordenadasGpsForm(null, null, null, null);
+      }
+      // Requisita nova leitura com máxima precisão
+      capturarGpsAoVivo(false);
+      document.getElementById("form-drawer").classList.add("open");
+    }
+
+    function fecharFormulario() {
+      document.getElementById("form-drawer").classList.remove("open");
+    }
+
+    function selecionarPressao(nivel) {
+      document.getElementById("campo-pressao").value = nivel;
+      document.querySelectorAll(".pressure-btn").forEach(b => b.classList.remove("active"));
+      if (nivel === 'Baixo') document.querySelector(".pressure-btn.baixo").classList.add("active");
+      if (nivel === 'Medio') document.querySelector(".pressure-btn.medio").classList.add("active");
+      if (nivel === 'Alto')  document.querySelector(".pressure-btn.alto").classList.add("active");
+    }
+
+    function ajustarLarva(delta) {
+      const input = document.getElementById("campo-larva");
+      let val = parseInt(input.value || "0") + delta;
+      if (val < 0) val = 0;
+      input.value = val;
+    }
+
+    // 6. Enviar Coleta (Kobo + Local)
+    async function salvarColeta(e) {
+      e.preventDefault();
+
+      const pontoTexto = document.getElementById("campo-ponto").value.trim();
+      const pontoId = document.getElementById("campo-ponto-id").value.trim();
+      const fa = document.getElementById("campo-fa").value.trim();
+      const dataColeta = document.getElementById("campo-data").value.trim();
+      const pressao = document.getElementById("campo-pressao").value.trim();
+      const qtdLarva = document.getElementById("campo-larva").value.trim();
+      const matricula = document.getElementById("campo-matricula").value.trim();
+      const lat = document.getElementById("campo-lat").value;
+      const lon = document.getElementById("campo-lon").value;
+
+      // Validação obrigatória
+      if (!dataColeta) {
+        showToast("⚠️ O campo Data da Coleta é obrigatório!", "error");
+        return;
+      }
+      if (!matricula) {
+        showToast("⚠️ O campo Matrícula é obrigatório!", "error");
+        document.getElementById("campo-matricula").focus();
+        return;
+      }
+      if (!pressao) {
+        showToast("⚠️ Selecione o nível de Pressão da Mosca (Baixo, Médio ou Alto)!", "error");
+        return;
+      }
+      if (!lat || !lon) {
+        showToast("⚠️ Coordenadas do GPS necessárias! Clique em 'Atualizar GPS' acima.", "error");
+        return;
+      }
+
+      // Lembrar matrícula para as próximas coletas
+      localStorage.setItem("clealco_matricula", matricula);
+
+      // Captura a hora exata local do lançamento
+      const now = new Date();
+      const horaLancamento = now.toLocaleTimeString('pt-BR');
+      const uuid = 'uuid:' + crypto.randomUUID();
+      const precisaoGps = userAcc || 5;
+
+      // Monta XML OpenRosa para o KoboToolbox com geopoint nativo
+      const xml = `<?xml version="1.0"?>
+<data id="${ASSET_UID}" version="v2">
+  <ponto_cadastrado>${escapeXml(pontoTexto)}</ponto_cadastrado>
+  <fa>${escapeXml(fa)}</fa>
+  <data_coleta>${dataColeta}</data_coleta>
+  <pressao>${pressao}</pressao>
+  <qtd_larva>${qtdLarva}</qtd_larva>
+  <matricula>${escapeXml(matricula)}</matricula>
+  <hora_lancamento>${horaLancamento}</hora_lancamento>
+  <localizacao_gps>${lat} ${lon} 0 ${precisaoGps}</localizacao_gps>
+  <latitude>${lat}</latitude>
+  <longitude>${lon}</longitude>
+  <meta>
+    <instanceID>${uuid}</instanceID>
+  </meta>
+</data>`;
+
+      const btn = document.getElementById("btn-submit");
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Enviando...`;
+
+      try {
+        const formData = new FormData();
+        const xmlBlob = new Blob([xml], { type: 'text/xml' });
+        formData.append("xml_submission_file", xmlBlob, "submission.xml");
+
+        // Envio direto via fetch para o Kobo
+        await fetch(KOBO_SUBMISSION_URL, {
+          method: "POST",
+          body: formData,
+          mode: "no-cors"
+        });
+
+        // Salvar cópia local no navegador como garantia
+        const historico = JSON.parse(localStorage.getItem("coletas_historico") || "[]");
+        historico.push({
+          ponto: pontoTexto,
+          fa: fa,
+          data: dataColeta,
+          pressao: pressao,
+          larva: qtdLarva,
+          matricula: matricula,
+          hora: horaLancamento,
+          lat: lat,
+          lon: lon,
+          salvoEm: new Date().toISOString()
+        });
+        localStorage.setItem("coletas_historico", JSON.stringify(historico));
+
+        showToast(`✅ Coleta enviada com sucesso às ${horaLancamento}!`, "success");
+        fecharFormulario();
+
+        // Destacar ponto no mapa como coletado (verde)
+        if (lat && lon) {
+          const latVal = parseFloat(lat);
+          const lonVal = parseFloat(lon);
+          L.circleMarker([latVal, lonVal], {
+            radius: 10,
+            fillColor: '#10b981',
+            color: '#ffffff',
+            weight: 3,
+            fillOpacity: 1
+          }).addTo(map).bindPopup(`<b>✅ Coleta Realizada!</b><br>${pontoTexto}<br><b>Hora:</b> ${horaLancamento}<br><b>GPS:</b> ${latVal.toFixed(6)}, ${lonVal.toFixed(6)}`).openPopup();
+          map.setView([latVal, lonVal], 16);
+        }
+
+      } catch (err) {
+        showToast("⚠️ Gravado no histórico local! Envio pendente.", "error");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Finalizar Coleta`;
+      }
+    }
+
+    function showToast(msg, tipo) {
+      const toast = document.getElementById("toast");
+      toast.className = `show ${tipo}`;
+      toast.innerHTML = msg;
+      setTimeout(() => {
+        toast.className = "";
+      }, 4000);
+    }
+
+    function escapeXml(str) {
+      return (str || '').replace(/[<>&'"]/g, c => {
+        switch (c) {
+          case '<': return '&lt;';
+          case '>': return '&gt;';
+          case '&': return '&amp;';
+          case '\'': return '&apos;';
+          case '"': return '&quot;';
+        }
+      });
+    }
+
+    function escapeQuotes(str) {
+      return (str || '').replace(/'/g, "\\'");
+    }
+  </script>
+</body>
+</html>
