@@ -702,24 +702,37 @@
     /* Custom Popup Styling */
     .leaflet-popup-content-wrapper {
       border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.3);
       padding: 0;
       overflow: hidden;
+      border: 1px solid rgba(0, 0, 0, 0.08);
     }
     .leaflet-popup-content {
       margin: 0;
-      line-height: 1.4;
+      line-height: 1.45;
+      min-width: 240px;
+      max-width: 300px;
+    }
+    .leaflet-container a.leaflet-popup-close-button {
+      color: #ffffff !important;
+      padding: 6px 10px !important;
+      font-size: 18px !important;
+      font-weight: bold !important;
+      top: 4px !important;
+      right: 6px !important;
+      z-index: 10;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.6);
     }
     .point-card-header {
       background: #1b4332;
       color: white;
-      padding: 10px 14px;
+      padding: 10px 34px 10px 14px;
       font-size: 13px;
       font-weight: bold;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
     }
     .point-card-body {
       padding: 12px 14px;
@@ -728,6 +741,10 @@
     }
     .point-card-body p {
       margin-bottom: 6px;
+      word-break: break-word;
+    }
+    .point-card-body p:last-child {
+      margin-bottom: 0;
     }
     .point-card-body strong {
       color: #0f172a;
@@ -1053,7 +1070,7 @@
               </button>
             </div>
           `;
-          layer.bindPopup(content);
+          layer.bindPopup(content, { maxWidth: 300, minWidth: 240 });
         }
       }).addTo(map);
     }
@@ -1483,13 +1500,23 @@
         if (lat && lon) {
           const latVal = parseFloat(lat);
           const lonVal = parseFloat(lon);
+          const popupContent = `
+            <div class="point-card-header" style="background: linear-gradient(135deg, #15803d, #166534);">
+              <span><i class="fa-solid fa-circle-check"></i> Coleta Realizada!</span>
+            </div>
+            <div class="point-card-body">
+              <p><strong>Ponto:</strong> ${escapeHtml(pontoTexto)}</p>
+              <p><strong>Hora:</strong> ${horaLancamento}</p>
+              <p><strong>GPS:</strong> ${latVal.toFixed(6)}, ${lonVal.toFixed(6)}</p>
+            </div>
+          `;
           L.circleMarker([latVal, lonVal], {
             radius: 10,
             fillColor: '#10b981',
             color: '#ffffff',
             weight: 3,
             fillOpacity: 1
-          }).addTo(map).bindPopup(`<b>✅ Coleta Realizada!</b><br>${pontoTexto}<br><b>Hora:</b> ${horaLancamento}<br><b>GPS:</b> ${latVal.toFixed(6)}, ${lonVal.toFixed(6)}`).openPopup();
+          }).addTo(map).bindPopup(popupContent, { maxWidth: 300, minWidth: 240 }).openPopup();
           map.setView([latVal, lonVal], 16);
         }
 
