@@ -1,26 +1,39 @@
-﻿{
-  name: Clealco Mosca - Monitoramento de Campo,
-  short_name: Clealco Mosca,
-  description: Sistema de Monitoramento e Coleta de Mosca dos Estabulos - Clealco,
-  start_url: ./index.html,
-  scope: ./,
-  display: standalone,
-  orientation: portrait-primary,
-  background_color: #0f172a,
-  theme_color: #1b4332,
-  lang: pt-BR,
-  icons: [
+{
+  "id": "/MONITORAMENTO_MOSCA/",
+  "name": "Clealco Mosca - Monitoramento de Campo",
+  "short_name": "Clealco Mosca",
+  "description": "Sistema de Monitoramento e Coleta de Mosca dos Estábulos - Clealco",
+  "start_url": "/MONITORAMENTO_MOSCA/index.html",
+  "scope": "/MONITORAMENTO_MOSCA/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#1b4332",
+  "lang": "pt-BR",
+  "icons": [
     {
-      src: icon-192.png,
-      sizes: 192x192,
-      type: image/png,
-      purpose: any maskable
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      src: icon-512.png,
-      sizes: 512x512,
-      type: image/png,
-      purpose: any maskable
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
