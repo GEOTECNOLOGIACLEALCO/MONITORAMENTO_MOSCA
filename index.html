@@ -14,8 +14,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Clealco Mosca">
-  <link rel="icon" type="image/png" href="logo clealco.png">
-  <link rel="apple-touch-icon" href="logo clealco.png">
+  
+  <!-- PWA Manifest & Icons -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <link rel="icon" type="image/png" href="icon-192.png">
   
   <!-- Leaflet CSS & FontAwesome -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -128,6 +133,29 @@
     .btn-refresh-app:active {
       transform: scale(0.94);
       background: rgba(255, 255, 255, 0.38);
+    }
+
+    .btn-install-app {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #ffffff;
+      border: 1px solid #fbbf24;
+      padding: 7px 13px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 10px rgba(245, 158, 11, 0.4);
+      transition: all 0.2s;
+    }
+    .btn-install-app:hover {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      transform: translateY(-1px);
+    }
+    .btn-install-app:active {
+      transform: scale(0.95);
     }
 
     .btn {
@@ -887,9 +915,14 @@
           <p>Monitoramento & Coleta de Campo</p>
         </div>
       </div>
-      <button class="btn-refresh-app" onclick="forcarAtualizacaoApp()" title="Atualizar aplicativo e limpar cache">
-        <i class="fa-solid fa-arrows-rotate" id="icon-refresh-app"></i> Atualizar
-      </button>
+      <div class="top-actions">
+        <button id="btn-install-app" class="btn-install-app" onclick="acionarInstalacaoApp()" style="display:none;" title="Instalar aplicativo no computador ou celular">
+          <i class="fa-solid fa-download"></i> Instalar App
+        </button>
+        <button class="btn-refresh-app" onclick="forcarAtualizacaoApp()" title="Atualizar aplicativo e limpar cache">
+          <i class="fa-solid fa-arrows-rotate" id="icon-refresh-app"></i> Atualizar
+        </button>
+      </div>
     </header>
 
     <!-- GPS Info Bar -->
@@ -1682,6 +1715,70 @@
         url.searchParams.set('_v', Date.now());
         window.location.replace(url.toString());
       }, 600);
+    }
+
+    // ==========================================
+    // 7. PWA: Service Worker e Instalação do App
+    // ==========================================
+    let deferredPrompt = null;
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+          console.log('SW PWA ativo:', reg.scope);
+        }).catch((err) => {
+          console.log('Falha ao registrar SW:', err);
+        });
+      });
+    }
+
+    // Exibir o botão se não estiver rodando no modo standalone (aplicativo já instalado)
+    window.addEventListener('DOMContentLoaded', () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      const btn = document.getElementById("btn-install-app");
+      if (btn && !isStandalone) {
+        btn.style.display = "inline-flex";
+      }
+    });
+
+    // Captura o evento nativo de instalação do Chrome / Edge / Android
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const btn = document.getElementById("btn-install-app");
+      if (btn) btn.style.display = "inline-flex";
+    });
+
+    // Quando o app é instalado com sucesso
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      const btn = document.getElementById("btn-install-app");
+      if (btn) btn.style.display = "none";
+      showToast("🎉 Clealco Mosca instalado como aplicativo!", "success");
+    });
+
+    // Função acionada ao clicar em "Instalar App"
+    async function acionarInstalacaoApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          const btn = document.getElementById("btn-install-app");
+          if (btn) btn.style.display = "none";
+        }
+        deferredPrompt = null;
+      } else {
+        mostrarDicaInstalacaoManual();
+      }
+    }
+
+    function mostrarDicaInstalacaoManual() {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      if (isIOS) {
+        alert("📲 Como instalar no iPhone (Safari):\n\n1. Toque no botão de Compartilhar (ícone do quadrado com a seta para cima no rodapé do Safari)\n2. Role para baixo e toque em 'Adicionar à Tela de Início'\n3. Toque em 'Adicionar' no canto superior direito.");
+      } else {
+        alert("📲 Como instalar o Aplicativo:\n\n💻 No Computador (Chrome ou Edge):\nClique no ícone de instalar [🖥️+] no canto direito da barra de endereços (ou no menu ⋮ > 'Instalar Clealco Mosca').\n\n📱 No Celular Android:\nToque no menu (3 pontinhos) no canto superior direito do Chrome e selecione 'Instalar aplicativo' ou 'Adicionar à tela inicial'.");
+      }
     }
   </script>
 </body>
