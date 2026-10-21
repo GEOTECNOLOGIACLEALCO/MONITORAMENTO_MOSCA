@@ -1,64 +1,108 @@
 ================================================================================
-           CLEALCO - SISTEMA DE MONITORAMENTO DE MOSCA (100% WEB)
+           CLEALCO - SISTEMA DE MONITORAMENTO DE MOSCA DOS ESTÁBULOS
 ================================================================================
 
-Este projeto funciona de forma 100% Web: coleta georreferenciada no campo,
-armazenamento em nuvem no KoboToolbox e exportação direta de relatórios em Excel.
+Este projeto é uma aplicação web completa (PWA) e georreferenciada para o 
+monitoramento de armadilhas de mosca dos estábulos da Clealco.
 
-Qualquer pessoa da equipe pode operar o sistema com facilidade:
+Qualquer pessoa da equipe pode operar o sistema com facilidade utilizando o painel:
+👉 MENU_MONITORAMENTO.bat
 
---------------------------------------------------------------------------------
-1. COMO COLETAR OS DADOS NO CAMPO
---------------------------------------------------------------------------------
-Existem duas formas fáceis:
-
-Opção A (Pelo Computador ou Celular via Aplicação Web):
-- Abra o painel "MENU_MONITORAMENTO.bat" e aperte [1] (ou abra "index.html").
-- O mapa exibirá a imagem de satélite, os perímetros das fazendas e os 78 pontos.
-- Clique em qualquer ponto vermelho no mapa e clique em "Coletar Neste Ponto".
-- O formulário abrirá com o Ponto e a Fazenda já preenchidos.
-- Preencha a Data, selecione a Pressão (Baixo, Médio, Alto), a quantidade de larvas
-  e a sua Matrícula.
-- Clique em "Finalizar Coleta". O ponto ficará verde no mapa (concluído) e a hora
-  será gravada automaticamente no horário oficial de Brasília.
-
-Opção B (Pelo Link Direto no Navegador do Celular):
-- Abra no celular o link oficial:
-  https://ee.kobotoolbox.org/single/aHhcfXhL
-- Preencha a ficha e clique em Enviar.
-
-
---------------------------------------------------------------------------------
-2. COMO BAIXAR A PLANILHA DE COLETAS EM EXCEL
---------------------------------------------------------------------------------
-- Abra o arquivo: "MENU_MONITORAMENTO.bat"
-- Pressione a tecla [2] no teclado.
-- O sistema conecta à nuvem do KoboToolbox e gera instantaneamente o arquivo:
-  👉 "Coletas_Monitoramento_Mosca.xlsx"
-  (Contendo: Data, Hora em Brasília, Ponto, Fazenda, Pressão, Larvas, Matrícula e GPS).
-
-
---------------------------------------------------------------------------------
-3. COMO ATUALIZAR AS BASES NO FUTURO (SE MUDAR FAZENDAS OU PONTOS)
---------------------------------------------------------------------------------
-Se no futuro houver novas fazendas ou novos pontos de monitoramento:
-1. Substitua os shapefiles na pasta "SHP\" ("PERIMETRO_FAZENDAS.shp" e "Pontos_Monitoramento_Mosca.shp").
-2. Abra o "MENU_MONITORAMENTO.bat" e pressione a tecla [3].
-3. O script atualiza automaticamente o mapa web ("dados_mapa.js").
-
-
---------------------------------------------------------------------------------
-ESTRUTURA DE PASTAS E ARQUIVOS:
---------------------------------------------------------------------------------
-📁 SHP\                             -> Shapefiles mestres (Fazendas e Pontos)
-📄 MENU_MONITORAMENTO.bat           -> Painel interativo de 2 cliques
-📄 index.html                       -> Aplicação web de coleta com satélite e GPS
-📄 dados_mapa.js                    -> Base geográfica leve da aplicação web
-📄 Coletas_Monitoramento_Mosca.xlsx -> Planilha Excel com os dados descarregados
-📄 baixar_planilha_coletas.py       -> Motor que puxa as coletas para o Excel
-📄 atualizar_base_web.py            -> Motor que processa novos shapefiles para a web
-📄 LEIA-ME_MANUAL_DO_USUARIO.txt   -> Este manual de instruções
 
 ================================================================================
-Desenvolvido para a Clealco - Sistema 100% Web de Monitoramento
+1. OPÇÕES DO PAINEL PRINCIPAL (MENU_MONITORAMENTO.bat)
+================================================================================
+
+Basta dar dois cliques em "MENU_MONITORAMENTO.bat" para acessar:
+
+[1] Abrir Mapa de Coleta no Navegador
+    -> Abre a aplicação web (index.html) no navegador do computador.
+    -> Permite visualizar o satélite, as fazendas e clicar nas armadilhas para consultar ou registrar coletas.
+
+[2] Baixar Relatório de Coletas em Excel
+    -> Conecta diretamente à nuvem do KoboToolbox.
+    -> Baixa automaticamente todas as coletas registradas pelos técnicos.
+    -> Baixa todas as 3 fotos de cada coleta para a pasta "Fotos_Coletas\".
+    -> Gera a planilha "Coletas_Monitoramento_Mosca.xlsx" com links diretos para as fotos locais e na nuvem.
+
+[3] Atualizar Base do Mapa
+    -> Processa os shapefiles atualizados da pasta "SHP\" ("Armadilhas_Mosca.shp" e "PERIMETRO_FAZENDAS.shp").
+    -> Consulta o status de coleta na nuvem e atualiza a base geográfica leve ("dados_mapa.js").
+
+[4] Publicar Alterações no GitHub (Atualizar App do Celular)
+    -> Envia as novas bases e alterações para o GitHub Pages.
+    -> Atualiza o aplicativo no celular de todos os técnicos automaticamente.
+
+[5] Abrir Pasta de Fotos das Coletas
+    -> Abre a pasta "Fotos_Coletas\" no Windows Explorer para visualização rápida das imagens.
+
+
+================================================================================
+2. COMO O TÉCNICO UTILIZA NO CELULAR (CAMPO)
+================================================================================
+
+1. Acesso ao Aplicativo:
+   -> No navegador do celular (Chrome ou Safari), abra o link oficial do GitHub Pages:
+      https://geotecnologiaclealco.github.io/MONITORAMENTO_MOSCA/
+   -> Para instalar como aplicativo na tela inicial do celular:
+      - Android: Toque nos 3 pontinhos do Chrome > "Instalar aplicativo" ou "Adicionar à tela inicial".
+      - iPhone: Toque no botão Compartilhar do Safari > "Adicionar à Tela de Início".
+
+2. Marcadores das Armadilhas no Mapa:
+   -> 🔴 Vermelho com silhueta de mosca: Armadilha pendente (ainda não coletada).
+   -> 🟢 Verde com selo de verificado (✓): Coleta já realizada.
+
+3. Realizando a Coleta:
+   -> Toque sobre a armadilha no mapa (ou busque pelo código na gaveta de busca).
+   -> Toque em "Coletar Neste Ponto".
+   -> O formulário abre com os dados da armadilha e fazenda já preenchidos.
+   -> Tire as 3 fotos obrigatórias da armadilha diretamente pela câmera do celular.
+   -> Selecione o nível de Pressão da Mosca (Baixo, Médio, Alto).
+   -> Digite sua Matrícula (o app memoriza para as próximas).
+   -> Clique em "Finalizar Coleta".
+   -> O marcador da armadilha fica verde imediatamente no mapa.
+
+4. Botão "🔄 Atualizar" (Canto Superior Direito):
+   -> Se houver atualizações de mapa ou sistema, basta tocar em "Atualizar" para 
+      limpar o cache do celular e recarregar a versão mais recente em 1 clique.
+
+
+================================================================================
+3. ESTRUTURA DE PASTAS E ARQUIVOS DO PROJETO
+================================================================================
+
+📁 SHP\
+   Contém os 2 shapefiles mestres do projeto:
+   - Armadilhas_Mosca.*    -> Localização e atributos das 76 armadilhas.
+   - PERIMETRO_FAZENDAS.*  -> Polígonos de contorno de todas as fazendas da Usina.
+
+📁 Fotos_Coletas\
+   Armazena as fotos em alta resolução baixadas da nuvem automaticamente pela Opção [2].
+
+📁 excluir\
+   Pasta de descarte seguro. Contém arquivos antigos e duplicados que foram substituídos.
+   Pode ser apagada a qualquer momento se desejar economizar espaço.
+
+📄 MENU_MONITORAMENTO.bat
+   Painel de controle principal do usuário (2 cliques).
+
+📄 Coletas_Monitoramento_Mosca.xlsx
+   Relatório consolidado de coletas com data, hora de Brasília, ponto, fazenda, 
+   pressão, matrícula, GPS e links das fotos.
+
+📄 Localização Armadilhas Mosca.xlsx
+   Planilha com a tabela original de coordenadas das armadilhas para referência.
+
+📄 baixar_planilha_coletas.py
+   Script Python que baixa os dados do KoboToolbox e faz o download das fotos.
+
+📄 atualizar_base_web.py
+   Script Python que lê os shapefiles de "SHP\" e gera a base "dados_mapa.js".
+
+📄 index.html, dados_mapa.js, sw.js, manifest.json, icon-*.png
+   Arquivos centrais da aplicação web e do aplicativo PWA.
+
+
+================================================================================
+Clealco - Geotecnologia e Monitoramento Agrícola
 ================================================================================

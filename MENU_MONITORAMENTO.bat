@@ -70,11 +70,11 @@ echo ===========================================================================
 echo   [4] PUBLICANDO ATUALIZACOES NO GITHUB (APP DO CELULAR)...
 echo ================================================================================
 echo.
-echo -> Verificando arquivos alterados...
+echo [*] Verificando arquivos alterados...
 git add -A
 git status -s
 echo.
-echo -> Enviando atualizacoes para o GitHub...
+echo [*] Enviando atualizacoes para o GitHub...
 git commit -m "Atualizacao do sistema e base geografica" > nul 2>&1
 git push origin main
 echo.
@@ -83,6 +83,7 @@ echo   [CONCLUIDO] Projeto sincronizado com o GitHub com sucesso!
 echo   Basta tocar em 'Atualizar' no celular para carregar as mudancas.
 echo ================================================================================
 pause
+goto MENU
 :OP_FOTOS
 cls
 color 0E
