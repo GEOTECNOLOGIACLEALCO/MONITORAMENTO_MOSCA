@@ -1,6 +1,7 @@
-﻿# Planilhas locais de dados de coletas
+# Planilhas locais de dados de coletas e fotos baixadas
 *.xlsx
 ~$*.xlsx
+Fotos_Coletas/
 
 # Python
 __pycache__/

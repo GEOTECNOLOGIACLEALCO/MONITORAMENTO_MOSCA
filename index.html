@@ -1187,7 +1187,7 @@
 
   <!-- Leaflet JS & Map Data -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="dados_mapa.js?v=20261021_1145"></script>
+  <script src="dados_mapa.js?v=20261021_1258"></script>
 
   <script>
     const ASSET_UID = "aWa7hibK6XamM3jmd9R737";
@@ -1861,9 +1861,9 @@
         const formData = new FormData();
         const xmlBlob = new Blob([xml], { type: 'text/xml' });
         formData.append("xml_submission_file", xmlBlob, "submission.xml");
-        formData.append("foto_1.jpg", fotosCapturadas[1].blob, "foto_1.jpg");
-        formData.append("foto_2.jpg", fotosCapturadas[2].blob, "foto_2.jpg");
-        formData.append("foto_3.jpg", fotosCapturadas[3].blob, "foto_3.jpg");
+        formData.append("foto_1", fotosCapturadas[1].blob, "foto_1.jpg");
+        formData.append("foto_2", fotosCapturadas[2].blob, "foto_2.jpg");
+        formData.append("foto_3", fotosCapturadas[3].blob, "foto_3.jpg");
 
         // Envio direto via fetch para o Kobo
         await fetch(KOBO_SUBMISSION_URL, {

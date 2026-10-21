@@ -46,7 +46,13 @@ if os.path.exists(ref_shp):
     except Exception:
         pass
 
+# Pasta para armazenar as fotos baixadas
+fotos_dir = os.path.join(base_dir, "Fotos_Coletas")
+os.makedirs(fotos_dir, exist_ok=True)
+
 rows = []
+total_fotos_baixadas = 0
+
 for r in results:
     lat, lon = None, None
     gps_str = r.get("localizacao_gps")
@@ -104,18 +110,47 @@ for r in results:
             except Exception:
                 hora = sub_time.split("T")[1].split(".")[0]
 
-    # Obter anexos de fotos
+    # Obter e baixar anexos de fotos da coleta
     attachments = r.get("_attachments", [])
-    foto_urls = {}
+    sub_id = str(r.get("_id", ""))
+    foto_links = {"FOTO_1": "", "FOTO_2": "", "FOTO_3": ""}
+
     for att in attachments:
         fname = att.get("filename", "")
         dl_url = att.get("download_url", "")
-        if "foto_1" in fname or "foto1" in fname:
-            foto_urls["FOTO_1"] = dl_url or fname
-        elif "foto_2" in fname or "foto2" in fname:
-            foto_urls["FOTO_2"] = dl_url or fname
-        elif "foto_3" in fname or "foto3" in fname:
-            foto_urls["FOTO_3"] = dl_url or fname
+        q_xpath = att.get("question_xpath", "")
+
+        slot = None
+        if q_xpath == "foto_1" or "foto_1" in fname or "foto1" in fname:
+            slot = "FOTO_1"
+        elif q_xpath == "foto_2" or "foto_2" in fname or "foto2" in fname:
+            slot = "FOTO_2"
+        elif q_xpath == "foto_3" or "foto_3" in fname or "foto3" in fname:
+            slot = "FOTO_3"
+        elif q_xpath == "foto_armadilha" or "foto_armadilha" in fname:
+            slot = "FOTO_1"
+
+        if slot and dl_url:
+            local_fname = f"Coleta_{sub_id}_{slot.lower()}.jpg"
+            local_fpath = os.path.join(fotos_dir, local_fname)
+            
+            # Baixa o arquivo para o disco se ainda não tiver sido baixado
+            if not os.path.exists(local_fpath) or os.path.getsize(local_fpath) == 0:
+                try:
+                    img_resp = requests.get(dl_url, headers=headers, timeout=20)
+                    if img_resp.status_code == 200:
+                        with open(local_fpath, "wb") as f_img:
+                            f_img.write(img_resp.content)
+                        total_fotos_baixadas += 1
+                        print(f"   [FOTO BAIXADA] {local_fname}")
+                except Exception as e:
+                    print(f"   [AVISO] Falha ao baixar foto {local_fname}: {e}")
+
+            if os.path.exists(local_fpath) and os.path.getsize(local_fpath) > 0:
+                # Hiperlink relativo para abrir direto no Excel
+                foto_links[slot] = f'=HYPERLINK("Fotos_Coletas\\{local_fname}", "Ver {slot} ({local_fname})")'
+            else:
+                foto_links[slot] = dl_url
 
     rows.append({
         "DATA": str(r.get("data_coleta", "")),
@@ -124,12 +159,12 @@ for r in results:
         "FA": str(r.get("fa", "")),
         "PRESSAO": str(r.get("pressao", "")),
         "MATRICULA": str(r.get("matricula", "")),
-        "FOTO_1": foto_urls.get("FOTO_1", str(r.get("foto_1", ""))),
-        "FOTO_2": foto_urls.get("FOTO_2", str(r.get("foto_2", ""))),
-        "FOTO_3": foto_urls.get("FOTO_3", str(r.get("foto_3", ""))),
+        "FOTO_1": foto_links["FOTO_1"],
+        "FOTO_2": foto_links["FOTO_2"],
+        "FOTO_3": foto_links["FOTO_3"],
         "LATITUDE": lat if lat is not None else "",
         "LONGITUDE": lon if lon is not None else "",
-        "ID_REGISTRO": str(r.get("_id", ""))
+        "ID_REGISTRO": sub_id
     })
 
 df = pd.DataFrame(rows)

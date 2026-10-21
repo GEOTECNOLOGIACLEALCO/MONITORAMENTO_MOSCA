@@ -14,13 +14,15 @@ echo   [1] Abrir Mapa de Coleta no Navegador (index.html)
 echo   [2] Baixar Relatorio de Coletas em Excel (Coletas_Monitoramento_Mosca.xlsx)
 echo   [3] Atualizar Base do Mapa (Processar novos shapefiles para o mapa web)
 echo   [4] Publicar Alteracoes no GitHub (Atualizar App do Celular)
+echo   [5] Abrir Pasta de Fotos das Coletas (Fotos_Coletas)
 echo   [0] Sair
 echo.
 echo ================================================================================
 echo.
-choice /C 12340 /N /M "Pressione 1, 2, 3, 4 ou 0: "
+choice /C 123450 /N /M "Pressione 1, 2, 3, 4, 5 ou 0: "
 
-if errorlevel 5 goto OP_SAIR
+if errorlevel 6 goto OP_SAIR
+if errorlevel 5 goto OP_FOTOS
 if errorlevel 4 goto OP_GITHUB
 if errorlevel 3 goto OP_UPDATE
 if errorlevel 2 goto OP_EXCEL
@@ -81,6 +83,17 @@ echo   [CONCLUIDO] Projeto sincronizado com o GitHub com sucesso!
 echo   Basta tocar em 'Atualizar' no celular para carregar as mudancas.
 echo ================================================================================
 pause
+:OP_FOTOS
+cls
+color 0E
+echo ================================================================================
+echo   [5] ABRINDO PASTA DE FOTOS DAS COLETAS...
+echo ================================================================================
+echo.
+if not exist "Fotos_Coletas" mkdir "Fotos_Coletas"
+start "" "Fotos_Coletas"
+echo Pasta Fotos_Coletas aberta no Explorer!
+timeout /t 2 > nul
 goto MENU
 
 :OP_SAIR
