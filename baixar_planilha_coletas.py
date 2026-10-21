@@ -34,7 +34,10 @@ if not results:
     exit(0)
 
 # Carregar coordenadas dos pontos de referência
-ref_shp = os.path.join(base_dir, "SHP", "Pontos_Monitoramento_Mosca.shp")
+ref_shp = os.path.join(base_dir, "SHP", "Armadilhas_Mosca.shp")
+if not os.path.exists(ref_shp):
+    ref_shp = os.path.join(base_dir, "SHP", "Pontos_Monitoramento_Mosca.shp")
+
 gdf_ref = None
 if os.path.exists(ref_shp):
     try:
@@ -77,10 +80,12 @@ for r in results:
         if m:
             try:
                 num_pto = int(m.group(1) or m.group(2) or m.group(3) or m.group(4))
-                match = gdf_ref[gdf_ref['NUM_PONTO'] == num_pto]
-                if len(match) > 0:
-                    geom_pt = match.geometry.iloc[0]
-                    lon, lat = float(geom_pt.x), float(geom_pt.y)
+                col_id = 'ID' if 'ID' in gdf_ref.columns else ('NUM_PONTO' if 'NUM_PONTO' in gdf_ref.columns else None)
+                if col_id:
+                    match = gdf_ref[gdf_ref[col_id] == num_pto]
+                    if len(match) > 0:
+                        geom_pt = match.geometry.iloc[0]
+                        lon, lat = float(geom_pt.x), float(geom_pt.y)
             except Exception:
                 pass
 
@@ -99,14 +104,29 @@ for r in results:
             except Exception:
                 hora = sub_time.split("T")[1].split(".")[0]
 
+    # Obter anexos de fotos
+    attachments = r.get("_attachments", [])
+    foto_urls = {}
+    for att in attachments:
+        fname = att.get("filename", "")
+        dl_url = att.get("download_url", "")
+        if "foto_1" in fname or "foto1" in fname:
+            foto_urls["FOTO_1"] = dl_url or fname
+        elif "foto_2" in fname or "foto2" in fname:
+            foto_urls["FOTO_2"] = dl_url or fname
+        elif "foto_3" in fname or "foto3" in fname:
+            foto_urls["FOTO_3"] = dl_url or fname
+
     rows.append({
         "DATA": str(r.get("data_coleta", "")),
         "HORA": hora,
         "PONTO_REFERENCIA": p_ref,
         "FA": str(r.get("fa", "")),
         "PRESSAO": str(r.get("pressao", "")),
-        "QTD_LARVA": int(r.get("qtd_larva", 0) or 0),
         "MATRICULA": str(r.get("matricula", "")),
+        "FOTO_1": foto_urls.get("FOTO_1", str(r.get("foto_1", ""))),
+        "FOTO_2": foto_urls.get("FOTO_2", str(r.get("foto_2", ""))),
+        "FOTO_3": foto_urls.get("FOTO_3", str(r.get("foto_3", ""))),
         "LATITUDE": lat if lat is not None else "",
         "LONGITUDE": lon if lon is not None else "",
         "ID_REGISTRO": str(r.get("_id", ""))

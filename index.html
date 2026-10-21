@@ -629,37 +629,121 @@
       box-shadow: 0 0 0 2px rgba(185, 28, 28, 0.3);
     }
 
-    /* Counter Stepper */
-    .stepper {
+    /* Photos Capture Grid (3 fotos obrigatorias) */
+    .photos-header {
       display: flex;
+      justify-content: space-between;
       align-items: center;
+      margin-bottom: 2px;
     }
-
-    .stepper-btn {
-      width: 48px;
-      height: 44px;
-      background: #e2e8f0;
-      border: 1px solid #cbd5e1;
-      font-size: 18px;
-      font-weight: bold;
-      color: #1e293b;
+    .photos-count-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 12px;
+      background: #fee2e2;
+      color: #dc2626;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .photos-count-badge.completo {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+    .photos-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .photo-card {
+      position: relative;
+      aspect-ratio: 1;
+      border: 2px dashed #cbd5e1;
+      border-radius: 10px;
+      background: #f8fafc;
       cursor: pointer;
+      overflow: hidden;
+      transition: all 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-    .stepper-btn:first-child { border-radius: 8px 0 0 8px; }
-    .stepper-btn:last-child { border-radius: 0 8px 8px 0; }
-
-    .stepper-input {
-      flex: 1;
-      height: 44px;
+    .photo-card:hover {
+      border-color: #2d6a4f;
+      background: #f1f5f9;
+    }
+    .photo-card.filled {
+      border: 2px solid #16a34a;
+      background: #0f172a;
+    }
+    .photo-preview-box {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      padding: 6px;
       text-align: center;
-      border-radius: 0;
-      border-left: none;
-      border-right: none;
-      font-weight: bold;
-      font-size: 16px;
+    }
+    .photo-placeholder-icon {
+      font-size: 22px;
+      color: #94a3b8;
+    }
+    .photo-slot-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #334155;
+    }
+    .photo-status-tag {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .photo-status-tag.pendente {
+      background: #e2e8f0;
+      color: #64748b;
+    }
+    .photo-status-tag.pronta {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+    .photo-card.filled .photo-placeholder-icon,
+    .photo-card.filled .photo-slot-label,
+    .photo-card.filled .photo-status-tag {
+      display: none;
+    }
+    .btn-remove-photo {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(220, 38, 38, 0.9);
+      color: #ffffff;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      backdrop-filter: blur(2px);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      z-index: 5;
+    }
+    .btn-remove-photo:hover {
+      background: #b91c1c;
+      transform: scale(1.08);
     }
 
     /* Time badge */
@@ -1028,13 +1112,51 @@
         <input type="hidden" id="campo-pressao" required />
       </div>
 
-      <!-- Quantidade / Larva -->
+      <!-- Fotos da Armadilha (3 Fotos Obrigatorias) -->
       <div class="form-group">
-        <label>Qtd / Larva <span class="req">*</span></label>
-        <div class="stepper">
-          <button type="button" class="stepper-btn" onclick="ajustarLarva(-1)">-</button>
-          <input type="number" id="campo-larva" class="form-control stepper-input" value="0" min="0" required />
-          <button type="button" class="stepper-btn" onclick="ajustarLarva(1)">+</button>
+        <div class="photos-header">
+          <label><i class="fa-solid fa-camera"></i> Fotos da Armadilha <span class="req">* (3 fotos)</span></label>
+          <span class="photos-count-badge" id="photos-count-badge">0 de 3 fotos</span>
+        </div>
+        <div class="photos-grid">
+          <!-- Foto 1 -->
+          <div class="photo-card" id="photo-card-1" onclick="tirarFoto(1)">
+            <input type="file" id="input-foto-1" accept="image/*" capture="environment" style="display:none;" onchange="aoSelecionarFoto(1, event)">
+            <div class="photo-preview-box" id="preview-box-1">
+              <i class="fa-solid fa-camera photo-placeholder-icon"></i>
+              <span class="photo-slot-label">Foto 1</span>
+              <span class="photo-status-tag pendente" id="tag-foto-1">Tirar foto</span>
+            </div>
+            <button type="button" class="btn-remove-photo" id="btn-remove-1" onclick="removerFoto(1, event)" style="display:none;" title="Remover foto">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+
+          <!-- Foto 2 -->
+          <div class="photo-card" id="photo-card-2" onclick="tirarFoto(2)">
+            <input type="file" id="input-foto-2" accept="image/*" capture="environment" style="display:none;" onchange="aoSelecionarFoto(2, event)">
+            <div class="photo-preview-box" id="preview-box-2">
+              <i class="fa-solid fa-camera photo-placeholder-icon"></i>
+              <span class="photo-slot-label">Foto 2</span>
+              <span class="photo-status-tag pendente" id="tag-foto-2">Tirar foto</span>
+            </div>
+            <button type="button" class="btn-remove-photo" id="btn-remove-2" onclick="removerFoto(2, event)" style="display:none;" title="Remover foto">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+
+          <!-- Foto 3 -->
+          <div class="photo-card" id="photo-card-3" onclick="tirarFoto(3)">
+            <input type="file" id="input-foto-3" accept="image/*" capture="environment" style="display:none;" onchange="aoSelecionarFoto(3, event)">
+            <div class="photo-preview-box" id="preview-box-3">
+              <i class="fa-solid fa-camera photo-placeholder-icon"></i>
+              <span class="photo-slot-label">Foto 3</span>
+              <span class="photo-status-tag pendente" id="tag-foto-3">Tirar foto</span>
+            </div>
+            <button type="button" class="btn-remove-photo" id="btn-remove-3" onclick="removerFoto(3, event)" style="display:none;" title="Remover foto">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1065,7 +1187,7 @@
 
   <!-- Leaflet JS & Map Data -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="dados_mapa.js?v=20261018_1550"></script>
+  <script src="dados_mapa.js?v=20261021_1145"></script>
 
   <script>
     const ASSET_UID = "aWa7hibK6XamM3jmd9R737";
@@ -1148,21 +1270,22 @@
       } catch (e) {}
     }
 
-    // 3. Pontos de Monitoramento (78 pontos)
+    // 3. Armadilhas de Monitoramento
     const pontosLayersMap = {};
     let listaPontosCache = [];
 
     if (typeof DADOS_PONTOS !== 'undefined' && DADOS_PONTOS.features) {
       listaPontosCache = DADOS_PONTOS.features.map(f => {
         const p = f.properties;
-        const nomePonto = p.nome_ponto || `${p.id} - ${p.proprietario || 'Sem Nome'}`;
-        const fazendaNome = (p.propriedade && p.propriedade !== 'nan' && p.propriedade.trim() !== '') ? p.propriedade.trim() : (p.regiao && p.regiao !== 'nan' ? p.regiao.trim() : '-');
+        const nomePonto = p.ponto_desc || p.nome_ponto || `${p.armadilha || p.id} - ${p.fa_completo || 'Sem Nome'}`;
+        const fazendaNome = p.fa_completo || ((p.cod_fa && p.cod_fa !== '-') ? `${p.cod_fa} - ${p.fazenda}` : (p.fazenda || '-'));
         return {
           id: p.id,
+          armadilha: p.armadilha || '',
           nome: nomePonto,
-          proprietario: p.proprietario || '',
+          proprietario: p.fazenda || '',
           fazenda: fazendaNome,
-          regiao: p.regiao || 'Clealco',
+          regiao: p.unidade || p.regiao || 'Clealco',
           lat: p.lat,
           lon: p.lon
         };
@@ -1183,17 +1306,18 @@
         onEachFeature: (feature, layer) => {
           const p = feature.properties;
           pontosLayersMap[p.id] = layer;
-          const nomePonto = p.nome_ponto || `${p.id} - ${p.proprietario || 'Sem Nome'}`;
-          const fazendaNome = (p.propriedade && p.propriedade !== 'nan' && p.propriedade.trim() !== '') ? p.propriedade.trim() : (p.regiao && p.regiao !== 'nan' ? p.regiao.trim() : '-');
+          const nomePonto = p.ponto_desc || p.nome_ponto || `${p.armadilha || p.id} - ${p.fa_completo || 'Sem Nome'}`;
+          const fazendaNome = p.fa_completo || ((p.cod_fa && p.cod_fa !== '-') ? `${p.cod_fa} - ${p.fazenda}` : (p.fazenda || '-'));
+          const armadilhaNome = p.armadilha ? `Armadilha ${p.armadilha}` : nomePonto;
           const content = `
             <div class="point-card-header">
-              <span><i class="fa-solid fa-location-dot"></i> ${nomePonto}</span>
-              <span style="font-size:11px; opacity:0.85; max-width:140px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${p.regiao || 'Clealco'}</span>
+              <span><i class="fa-solid fa-location-dot"></i> ${escapeHtml(armadilhaNome)}</span>
+              <span style="font-size:11px; opacity:0.85; max-width:140px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHtml(p.unidade || 'Clealco')}</span>
             </div>
             <div class="point-card-body">
-              <p><strong>Ponto:</strong> ${nomePonto}</p>
-              <p><strong>Fazenda:</strong> ${fazendaNome}</p>
-              <p><strong>Proprietário:</strong> ${p.proprietario || '-'}</p>
+              <p><strong>Ponto:</strong> ${escapeHtml(nomePonto)}</p>
+              <p><strong>FA:</strong> ${escapeHtml(fazendaNome)}</p>
+              <p><strong>Armadilha:</strong> ${escapeHtml(p.armadilha || '-')}</p>
               <p><strong>Coordenadas:</strong> ${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}</p>
               <button class="btn-collect-point" onclick="abrirColetaPonto(${p.id})">
                 <i class="fa-solid fa-clipboard-check"></i> Coletar Neste Ponto
@@ -1384,6 +1508,7 @@
 
       const filtrados = listaPontosCache.filter(item => {
         const idStr = String(item.id);
+        const armStr = (item.armadilha || "").toLowerCase();
         const nomeStr = (item.nome || "").toLowerCase();
         const propStr = (item.proprietario || "").toLowerCase();
         const fazStr = (item.fazenda || "").toLowerCase();
@@ -1391,6 +1516,8 @@
 
         return idStr === termo ||
                idStr.includes(termo) ||
+               armStr === termo ||
+               armStr.includes(termo) ||
                nomeStr.includes(termo) ||
                propStr.includes(termo) ||
                fazStr.includes(termo) ||
@@ -1405,15 +1532,15 @@
       const countLabel = document.getElementById("filtro-count-label");
 
       if (countLabel) {
-        countLabel.innerHTML = `<span>Exibindo <b>${pontos.length}</b> de ${listaPontosCache.length} pontos</span>`;
+        countLabel.innerHTML = `<span>Exibindo <b>${pontos.length}</b> de ${listaPontosCache.length} armadilhas</span>`;
       }
 
       if (!pontos || pontos.length === 0) {
         container.innerHTML = `
           <div style="text-align:center; padding: 40px 20px; color:#64748b;">
             <i class="fa-solid fa-magnifying-glass" style="font-size:32px; opacity:0.35; margin-bottom:12px; display:block;"></i>
-            <p style="font-weight:700; color:#334155; margin-bottom:4px;">Nenhum ponto encontrado</p>
-            <p style="font-size:12px;">Tente pesquisar por outro número, proprietário ou fazenda.</p>
+            <p style="font-weight:700; color:#334155; margin-bottom:4px;">Nenhuma armadilha encontrada</p>
+            <p style="font-size:12px;">Tente pesquisar por código da armadilha (ex: C1, CPT), fazenda ou FA.</p>
           </div>
         `;
         return;
@@ -1421,10 +1548,11 @@
 
       let html = "";
       pontos.forEach(p => {
+        const badgeLabel = p.armadilha ? p.armadilha : '#' + p.id;
         html += `
           <div class="ponto-card" onclick="irParaPonto(${p.id})">
             <div class="ponto-card-left">
-              <div class="ponto-card-num">#${p.id}</div>
+              <div class="ponto-card-num" style="font-size:${badgeLabel.length > 3 ? '11px' : '13px'};">${escapeHtml(badgeLabel)}</div>
               <div class="ponto-card-details">
                 <div class="ponto-card-name">${escapeHtml(p.nome)}</div>
                 <div class="ponto-card-sub"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(p.fazenda)} • ${escapeHtml(p.regiao)}</div>
@@ -1434,7 +1562,7 @@
               <button class="btn-card-map" onclick="irParaPonto(${p.id})" title="Localizar no mapa">
                 <i class="fa-solid fa-crosshairs"></i> Ver
               </button>
-              <button class="btn-card-coletar" onclick="iniciarColetaDoFiltro(${p.id})" title="Registrar coleta neste ponto">
+              <button class="btn-card-coletar" onclick="iniciarColetaDoFiltro(${p.id})" title="Registrar coleta nesta armadilha">
                 <i class="fa-solid fa-clipboard-check"></i> Coletar
               </button>
             </div>
@@ -1475,21 +1603,156 @@
       });
     }
 
-    // 6. Funções do Formulário de Coleta
+    // 6. Funções do Formulário de Coleta e Fotos
+    let fotosCapturadas = { 1: null, 2: null, 3: null };
+
+    function resetarFotos() {
+      fotosCapturadas = { 1: null, 2: null, 3: null };
+      for (let i = 1; i <= 3; i++) {
+        const card = document.getElementById(`photo-card-${i}`);
+        const preview = document.getElementById(`preview-box-${i}`);
+        const btnRemove = document.getElementById(`btn-remove-${i}`);
+        const tag = document.getElementById(`tag-foto-${i}`);
+        const input = document.getElementById(`input-foto-${i}`);
+        if (card) card.classList.remove('filled');
+        if (preview) preview.style.backgroundImage = 'none';
+        if (btnRemove) btnRemove.style.display = 'none';
+        if (tag) {
+          tag.textContent = 'Tirar foto';
+          tag.className = 'photo-status-tag pendente';
+        }
+        if (input) input.value = '';
+      }
+      atualizarContadorFotos();
+    }
+
+    function tirarFoto(slot) {
+      const input = document.getElementById(`input-foto-${slot}`);
+      if (input) input.click();
+    }
+
+    function removerFoto(slot, event) {
+      if (event) event.stopPropagation();
+      fotosCapturadas[slot] = null;
+      const card = document.getElementById(`photo-card-${slot}`);
+      const preview = document.getElementById(`preview-box-${slot}`);
+      const btnRemove = document.getElementById(`btn-remove-${slot}`);
+      const tag = document.getElementById(`tag-foto-${slot}`);
+      const input = document.getElementById(`input-foto-${slot}`);
+      if (card) card.classList.remove('filled');
+      if (preview) preview.style.backgroundImage = 'none';
+      if (btnRemove) btnRemove.style.display = 'none';
+      if (tag) {
+        tag.textContent = 'Tirar foto';
+        tag.className = 'photo-status-tag pendente';
+      }
+      if (input) input.value = '';
+      atualizarContadorFotos();
+    }
+
+    function atualizarContadorFotos() {
+      let count = 0;
+      for (let i = 1; i <= 3; i++) {
+        if (fotosCapturadas[i]) count++;
+      }
+      const badge = document.getElementById('photos-count-badge');
+      if (badge) {
+        if (count === 3) {
+          badge.classList.add('completo');
+          badge.innerHTML = `<i class="fa-solid fa-check"></i> 3 de 3 fotos`;
+        } else {
+          badge.classList.remove('completo');
+          badge.textContent = `${count} de 3 fotos`;
+        }
+      }
+    }
+
+    async function aoSelecionarFoto(slot, event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      try {
+        showToast(`Otimizando Foto ${slot}...`, "info");
+        const { blob, dataUrl } = await redimensionarEComprimirFoto(file, 1280, 0.8);
+        fotosCapturadas[slot] = { blob, dataUrl, name: file.name };
+
+        const card = document.getElementById(`photo-card-${slot}`);
+        const preview = document.getElementById(`preview-box-${slot}`);
+        const btnRemove = document.getElementById(`btn-remove-${slot}`);
+        const tag = document.getElementById(`tag-foto-${slot}`);
+
+        if (preview) preview.style.backgroundImage = `url('${dataUrl}')`;
+        if (card) card.classList.add('filled');
+        if (btnRemove) btnRemove.style.display = 'flex';
+        if (tag) {
+          tag.textContent = 'Pronta';
+          tag.className = 'photo-status-tag pronta';
+        }
+        atualizarContadorFotos();
+        showToast(`📸 Foto ${slot} anexada com sucesso!`, "success");
+      } catch (err) {
+        console.error("Erro ao processar foto:", err);
+        showToast("⚠️ Não foi possível processar a foto.", "error");
+      }
+    }
+
+    function redimensionarEComprimirFoto(file, maxDimension, quality) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = reject;
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onerror = reject;
+          img.onload = () => {
+            let width = img.width;
+            let height = img.height;
+            if (width > height) {
+              if (width > maxDimension) {
+                height = Math.round((height * maxDimension) / width);
+                width = maxDimension;
+              }
+            } else {
+              if (height > maxDimension) {
+                width = Math.round((width * maxDimension) / height);
+                height = maxDimension;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob((blob) => {
+              if (!blob) {
+                reject(new Error("Falha na compressao da foto"));
+                return;
+              }
+              const dataUrl = canvas.toDataURL('image/jpeg', quality);
+              resolve({ blob, dataUrl });
+            }, 'image/jpeg', quality);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
     function abrirColetaPonto(pontoId) {
       fecharFiltro();
       preencherDataHoje();
+      resetarFotos();
       const feature = DADOS_PONTOS.features.find(f => f.properties.id === pontoId);
       if (feature) {
         const p = feature.properties;
-        const nomePonto = p.nome_ponto || `${p.id} - ${p.proprietario || 'Sem Nome'}`;
-        const fazendaNome = (p.propriedade && p.propriedade !== 'nan' && p.propriedade.trim() !== '') ? p.propriedade.trim() : (p.regiao && p.regiao !== 'nan' ? p.regiao.trim() : '');
+        const nomePonto = p.ponto_desc || p.nome_ponto || `${p.armadilha || p.id} - ${p.fa_completo || 'Sem Nome'}`;
+        const fazendaNome = p.fa_completo || ((p.cod_fa && p.cod_fa !== '-') ? `${p.cod_fa} - ${p.fazenda}` : (p.fazenda || ''));
 
         document.getElementById("campo-ponto").value = nomePonto;
-        document.getElementById("campo-ponto-id").value = `ponto_${String(p.id).padStart(2, '0')}`;
+        document.getElementById("campo-ponto-id").value = p.armadilha ? `arm_${p.armadilha}` : `ponto_${String(p.id).padStart(2, '0')}`;
         document.getElementById("campo-fa").value = fazendaNome;
         
-        atualizarCoordenadasGpsForm(p.lat, p.lon, null, `Ponto Cadastrado #${p.id}`);
+        atualizarCoordenadasGpsForm(p.lat, p.lon, null, `Armadilha #${p.id} (${p.armadilha || ''})`);
       }
       document.getElementById("form-drawer").classList.add("open");
     }
@@ -1497,6 +1760,7 @@
     function abrirColetaLivre() {
       fecharFiltro();
       preencherDataHoje();
+      resetarFotos();
       document.getElementById("campo-ponto").value = "Coleta Manual de Campo";
       document.getElementById("campo-ponto-id").value = "outro_novo";
       document.getElementById("campo-fa").value = "";
@@ -1524,14 +1788,7 @@
       if (nivel === 'Alto')  document.querySelector(".pressure-btn.alto").classList.add("active");
     }
 
-    function ajustarLarva(delta) {
-      const input = document.getElementById("campo-larva");
-      let val = parseInt(input.value || "0") + delta;
-      if (val < 0) val = 0;
-      input.value = val;
-    }
-
-    // 6. Enviar Coleta (Kobo + Local)
+    // 7. Enviar Coleta (Kobo + Local)
     async function salvarColeta(e) {
       e.preventDefault();
 
@@ -1540,7 +1797,6 @@
       const fa = document.getElementById("campo-fa").value.trim();
       const dataColeta = document.getElementById("campo-data").value.trim();
       const pressao = document.getElementById("campo-pressao").value.trim();
-      const qtdLarva = document.getElementById("campo-larva").value.trim();
       const matricula = document.getElementById("campo-matricula").value.trim();
       const lat = document.getElementById("campo-lat").value;
       const lon = document.getElementById("campo-lon").value;
@@ -1559,6 +1815,10 @@
         showToast("⚠️ Selecione o nível de Pressão da Mosca (Baixo, Médio ou Alto)!", "error");
         return;
       }
+      if (!fotosCapturadas[1] || !fotosCapturadas[2] || !fotosCapturadas[3]) {
+        showToast("⚠️ É obrigatório anexar as 3 fotos da armadilha!", "error");
+        return;
+      }
       if (!lat || !lon) {
         showToast("⚠️ Coordenadas do GPS necessárias! Clique em 'Atualizar GPS' acima.", "error");
         return;
@@ -1573,19 +1833,21 @@
       const uuid = 'uuid:' + crypto.randomUUID();
       const precisaoGps = userAcc || 5;
 
-      // Monta XML OpenRosa para o KoboToolbox com geopoint nativo
+      // Monta XML OpenRosa para o KoboToolbox com geopoint nativo e fotos
       const xml = `<?xml version="1.0"?>
 <data id="${ASSET_UID}" version="v2">
   <ponto_cadastrado>${escapeXml(pontoTexto)}</ponto_cadastrado>
   <fa>${escapeXml(fa)}</fa>
   <data_coleta>${dataColeta}</data_coleta>
   <pressao>${pressao}</pressao>
-  <qtd_larva>${qtdLarva}</qtd_larva>
   <matricula>${escapeXml(matricula)}</matricula>
   <hora_lancamento>${horaLancamento}</hora_lancamento>
   <localizacao_gps>${lat} ${lon} 0 ${precisaoGps}</localizacao_gps>
   <latitude>${lat}</latitude>
   <longitude>${lon}</longitude>
+  <foto_1>foto_1.jpg</foto_1>
+  <foto_2>foto_2.jpg</foto_2>
+  <foto_3>foto_3.jpg</foto_3>
   <meta>
     <instanceID>${uuid}</instanceID>
   </meta>
@@ -1593,12 +1855,15 @@
 
       const btn = document.getElementById("btn-submit");
       btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Enviando...`;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Enviando Coleta e Fotos...`;
 
       try {
         const formData = new FormData();
         const xmlBlob = new Blob([xml], { type: 'text/xml' });
         formData.append("xml_submission_file", xmlBlob, "submission.xml");
+        formData.append("foto_1.jpg", fotosCapturadas[1].blob, "foto_1.jpg");
+        formData.append("foto_2.jpg", fotosCapturadas[2].blob, "foto_2.jpg");
+        formData.append("foto_3.jpg", fotosCapturadas[3].blob, "foto_3.jpg");
 
         // Envio direto via fetch para o Kobo
         await fetch(KOBO_SUBMISSION_URL, {
@@ -1614,11 +1879,11 @@
           fa: fa,
           data: dataColeta,
           pressao: pressao,
-          larva: qtdLarva,
           matricula: matricula,
           hora: horaLancamento,
           lat: lat,
           lon: lon,
+          fotos: 3,
           salvoEm: new Date().toISOString()
         });
         localStorage.setItem("coletas_historico", JSON.stringify(historico));
