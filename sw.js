@@ -1,5 +1,5 @@
-// Service Worker para PWA Clealco Mosca - v6
-const CACHE_NAME = 'clealco-mosca-v6';
+// Service Worker para PWA Clealco Mosca - v7
+const CACHE_NAME = 'clealco-mosca-v7';
 const PRECACHE_ASSETS = [
   './',
   './index.html',
