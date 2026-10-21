@@ -957,6 +957,128 @@
     .btn-collect-point:hover {
       background: #1b4332;
     }
+    .btn-collect-point.coletado {
+      background: #15803d;
+    }
+    .btn-collect-point.coletado:hover {
+      background: #166534;
+    }
+
+    /* Custom Leaflet DivIcon: Armadilha de Mosca */
+    .custom-armadilha-divicon {
+      background: transparent !important;
+      border: none !important;
+    }
+    .marker-armadilha-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .marker-armadilha-wrapper:hover {
+      transform: scale(1.18);
+      z-index: 1000 !important;
+    }
+    .marker-armadilha-bubble {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #ffffff;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+      transition: all 0.3s ease;
+      color: #ffffff;
+    }
+    /* Estado: PENDENTE (Vermelho / Mosca) */
+    .marker-armadilha-wrapper.pendente .marker-armadilha-bubble {
+      background: linear-gradient(135deg, #ef4444, #b91c1c);
+    }
+    /* Estado: COLETADO (Verde Esmeralda com glow) */
+    .marker-armadilha-wrapper.coletado .marker-armadilha-bubble {
+      background: linear-gradient(135deg, #10b981, #047857);
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.9), 0 4px 10px rgba(0, 0, 0, 0.4);
+    }
+    .marker-armadilha-icon {
+      font-size: 15px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .marker-armadilha-badge-check {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #ffffff;
+      color: #10b981;
+      border: 1.5px solid #10b981;
+      font-size: 8px;
+      font-weight: 900;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    .marker-armadilha-wrapper.coletado .marker-armadilha-badge-check {
+      display: flex;
+    }
+    .marker-armadilha-label {
+      margin-top: 2px;
+      padding: 1px 5px;
+      background: rgba(15, 23, 42, 0.92);
+      color: #f8fafc;
+      font-size: 10px;
+      font-weight: 800;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+      white-space: nowrap;
+      letter-spacing: 0.2px;
+    }
+    .marker-armadilha-wrapper.coletado .marker-armadilha-label {
+      background: rgba(6, 78, 59, 0.95);
+      color: #a7f3d0;
+      border-color: #10b981;
+    }
+    /* Status Badge inside Popup */
+    .status-coleta-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .status-coleta-badge.coletado {
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #86efac;
+    }
+    .status-coleta-badge.pendente {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+    }
+    .btn-card-coletar.coletado {
+      background: #15803d;
+      border-color: #10b981;
+    }
+    .btn-card-coletar.coletado:hover {
+      background: #166534;
+    }
 
     /* User Marker */
     .user-marker {
@@ -1187,7 +1309,7 @@
 
   <!-- Leaflet JS & Map Data -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="dados_mapa.js?v=20261021_1258"></script>
+  <script src="dados_mapa.js?v=20261021_1330"></script>
 
   <script>
     const ASSET_UID = "aWa7hibK6XamM3jmd9R737";
@@ -1273,6 +1395,118 @@
     // 3. Armadilhas de Monitoramento
     const pontosLayersMap = {};
     let listaPontosCache = [];
+    let pontoSendoColetadoId = null;
+
+    function obterStatusArmadilha(p) {
+      let coletado = !!p.coletado;
+      let info = {
+        coletado: coletado,
+        data: p.data_coleta || '',
+        hora: p.hora_coleta || '',
+        pressao: p.pressao || '',
+        matricula: p.matricula || ''
+      };
+
+      try {
+        const historico = JSON.parse(localStorage.getItem("coletas_historico") || "[]");
+        const armCod = (p.armadilha || '').toUpperCase();
+        const pDesc = (p.ponto_desc || p.nome_ponto || '').toUpperCase();
+        const pId = p.id;
+
+        const local = historico.find(h => {
+          const hPonto = (h.ponto || '').toUpperCase();
+          return (h.pontoId && String(h.pontoId) === String(pId)) ||
+                 (armCod && hPonto.startsWith(armCod + ' ')) ||
+                 (armCod && hPonto === armCod) ||
+                 (pDesc && hPonto === pDesc);
+        });
+
+        if (local) {
+          info.coletado = true;
+          info.data = local.data || info.data;
+          info.hora = local.hora || info.hora;
+          info.pressao = local.pressao || info.pressao;
+          info.matricula = local.matricula || info.matricula;
+          info.origem = 'local';
+        }
+      } catch (e) {}
+
+      return info;
+    }
+
+    function criarIconeArmadilha(armadilhaCodigo, isColetado) {
+      const statusCls = isColetado ? 'coletado' : 'pendente';
+      const labelText = armadilhaCodigo || 'ARM';
+      const html = `
+        <div class="marker-armadilha-wrapper ${statusCls}">
+          <div class="marker-armadilha-bubble">
+            <span class="marker-armadilha-icon"><i class="fa-solid fa-mosquito"></i></span>
+            <span class="marker-armadilha-badge-check"><i class="fa-solid fa-check"></i></span>
+          </div>
+          <div class="marker-armadilha-label">${escapeHtml(labelText)}</div>
+        </div>
+      `;
+      return L.divIcon({
+        className: 'custom-armadilha-divicon',
+        html: html,
+        iconSize: [38, 48],
+        iconAnchor: [19, 17],
+        popupAnchor: [0, -22]
+      });
+    }
+
+    function gerarConteudoPopup(p, status) {
+      const nomePonto = p.ponto_desc || p.nome_ponto || `${p.armadilha || p.id} - ${p.fa_completo || 'Sem Nome'}`;
+      const fazendaNome = p.fa_completo || ((p.cod_fa && p.cod_fa !== '-') ? `${p.cod_fa} - ${p.fazenda}` : (p.fazenda || '-'));
+      const armadilhaNome = p.armadilha ? `Armadilha ${p.armadilha}` : nomePonto;
+
+      const headerBg = status.coletado ? 'background: linear-gradient(135deg, #15803d, #166534);' : '';
+      const headerIcon = status.coletado ? 'fa-solid fa-circle-check' : 'fa-solid fa-mosquito';
+
+      let badgeStatusHtml = '';
+      if (status.coletado) {
+        let detalheExtra = [];
+        if (status.hora) detalheExtra.push(`às ${escapeHtml(status.hora)}`);
+        if (status.data) detalheExtra.push(`em ${escapeHtml(status.data)}`);
+        if (status.pressao) detalheExtra.push(`Pressão: ${escapeHtml(status.pressao)}`);
+        if (status.matricula) detalheExtra.push(`Téc: ${escapeHtml(status.matricula)}`);
+        const extraTexto = detalheExtra.length > 0 ? ` (${detalheExtra.join(' • ')})` : '';
+
+        badgeStatusHtml = `
+          <div class="status-coleta-badge coletado">
+            <i class="fa-solid fa-check-double"></i>
+            <span><b>Coleta Realizada</b>${extraTexto}</span>
+          </div>
+        `;
+      } else {
+        badgeStatusHtml = `
+          <div class="status-coleta-badge pendente">
+            <i class="fa-solid fa-clock"></i>
+            <span><b>Pendente de Coleta</b> (Aguardando técnico)</span>
+          </div>
+        `;
+      }
+
+      const btnText = status.coletado ? 'Nova Coleta Nesta Armadilha' : 'Coletar Nesta Armadilha';
+      const btnClass = status.coletado ? 'btn-collect-point coletado' : 'btn-collect-point';
+
+      return `
+        <div class="point-card-header" style="${headerBg}">
+          <span><i class="${headerIcon}"></i> ${escapeHtml(armadilhaNome)}</span>
+          <span style="font-size:11px; opacity:0.85; max-width:140px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHtml(p.unidade || 'Clealco')}</span>
+        </div>
+        <div class="point-card-body">
+          ${badgeStatusHtml}
+          <p><strong>Ponto:</strong> ${escapeHtml(nomePonto)}</p>
+          <p><strong>FA:</strong> ${escapeHtml(fazendaNome)}</p>
+          <p><strong>Armadilha:</strong> ${escapeHtml(p.armadilha || '-')}</p>
+          <p><strong>Coordenadas:</strong> ${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}</p>
+          <button class="${btnClass}" onclick="abrirColetaPonto(${p.id})">
+            <i class="fa-solid fa-clipboard-check"></i> ${btnText}
+          </button>
+        </div>
+      `;
+    }
 
     if (typeof DADOS_PONTOS !== 'undefined' && DADOS_PONTOS.features) {
       listaPontosCache = DADOS_PONTOS.features.map(f => {
@@ -1287,44 +1521,33 @@
           fazenda: fazendaNome,
           regiao: p.unidade || p.regiao || 'Clealco',
           lat: p.lat,
-          lon: p.lon
+          lon: p.lon,
+          ponto_desc: p.ponto_desc || nomePonto,
+          fa_completo: fazendaNome,
+          unidade: p.unidade || p.regiao || 'Clealco',
+          coletado: !!p.coletado,
+          data_coleta: p.data_coleta || '',
+          hora_coleta: p.hora_coleta || '',
+          pressao: p.pressao || '',
+          matricula: p.matricula || ''
         };
       });
       listaPontosCache.sort((a, b) => a.id - b.id);
 
       markersLayer = L.geoJSON(DADOS_PONTOS, {
         pointToLayer: (feature, latlng) => {
-          return L.circleMarker(latlng, {
-            radius: 8,
-            fillColor: '#ef4444',
-            color: '#ffffff',
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.95
+          const p = feature.properties;
+          const status = obterStatusArmadilha(p);
+          return L.marker(latlng, {
+            icon: criarIconeArmadilha(p.armadilha, status.coletado)
           });
         },
         onEachFeature: (feature, layer) => {
           const p = feature.properties;
           pontosLayersMap[p.id] = layer;
-          const nomePonto = p.ponto_desc || p.nome_ponto || `${p.armadilha || p.id} - ${p.fa_completo || 'Sem Nome'}`;
-          const fazendaNome = p.fa_completo || ((p.cod_fa && p.cod_fa !== '-') ? `${p.cod_fa} - ${p.fazenda}` : (p.fazenda || '-'));
-          const armadilhaNome = p.armadilha ? `Armadilha ${p.armadilha}` : nomePonto;
-          const content = `
-            <div class="point-card-header">
-              <span><i class="fa-solid fa-location-dot"></i> ${escapeHtml(armadilhaNome)}</span>
-              <span style="font-size:11px; opacity:0.85; max-width:140px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHtml(p.unidade || 'Clealco')}</span>
-            </div>
-            <div class="point-card-body">
-              <p><strong>Ponto:</strong> ${escapeHtml(nomePonto)}</p>
-              <p><strong>FA:</strong> ${escapeHtml(fazendaNome)}</p>
-              <p><strong>Armadilha:</strong> ${escapeHtml(p.armadilha || '-')}</p>
-              <p><strong>Coordenadas:</strong> ${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}</p>
-              <button class="btn-collect-point" onclick="abrirColetaPonto(${p.id})">
-                <i class="fa-solid fa-clipboard-check"></i> Coletar Neste Ponto
-              </button>
-            </div>
-          `;
-          layer.bindPopup(content, { maxWidth: 300, minWidth: 240 });
+          layer.pontoProperties = p;
+          const status = obterStatusArmadilha(p);
+          layer.bindPopup(gerarConteudoPopup(p, status), { maxWidth: 320, minWidth: 250 });
         }
       }).addTo(map);
     }
@@ -1549,12 +1772,17 @@
       let html = "";
       pontos.forEach(p => {
         const badgeLabel = p.armadilha ? p.armadilha : '#' + p.id;
+        const status = obterStatusArmadilha(p);
+        const statusBadgeHtml = status.coletado
+          ? `<span style="font-size:10px; font-weight:700; color:#15803d; background:#dcfce7; padding:2px 6px; border-radius:4px; margin-left:6px;"><i class="fa-solid fa-check"></i> Coletada</span>`
+          : `<span style="font-size:10px; font-weight:700; color:#b91c1c; background:#fee2e2; padding:2px 6px; border-radius:4px; margin-left:6px;"><i class="fa-solid fa-clock"></i> Pendente</span>`;
+
         html += `
           <div class="ponto-card" onclick="irParaPonto(${p.id})">
             <div class="ponto-card-left">
-              <div class="ponto-card-num" style="font-size:${badgeLabel.length > 3 ? '11px' : '13px'};">${escapeHtml(badgeLabel)}</div>
+              <div class="ponto-card-num" style="font-size:${badgeLabel.length > 3 ? '11px' : '13px'}; background:${status.coletado ? '#15803d' : '#ef4444'};">${escapeHtml(badgeLabel)}</div>
               <div class="ponto-card-details">
-                <div class="ponto-card-name">${escapeHtml(p.nome)}</div>
+                <div class="ponto-card-name">${escapeHtml(p.nome)} ${statusBadgeHtml}</div>
                 <div class="ponto-card-sub"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(p.fazenda)} • ${escapeHtml(p.regiao)}</div>
               </div>
             </div>
@@ -1562,8 +1790,8 @@
               <button class="btn-card-map" onclick="irParaPonto(${p.id})" title="Localizar no mapa">
                 <i class="fa-solid fa-crosshairs"></i> Ver
               </button>
-              <button class="btn-card-coletar" onclick="iniciarColetaDoFiltro(${p.id})" title="Registrar coleta nesta armadilha">
-                <i class="fa-solid fa-clipboard-check"></i> Coletar
+              <button class="btn-card-coletar ${status.coletado ? 'coletado' : ''}" onclick="iniciarColetaDoFiltro(${p.id})" title="Registrar coleta nesta armadilha">
+                <i class="fa-solid ${status.coletado ? 'fa-check' : 'fa-clipboard-check'}"></i> ${status.coletado ? 'Coletado' : 'Coletar'}
               </button>
             </div>
           </div>
@@ -1742,6 +1970,7 @@
       fecharFiltro();
       preencherDataHoje();
       resetarFotos();
+      pontoSendoColetadoId = pontoId;
       const feature = DADOS_PONTOS.features.find(f => f.properties.id === pontoId);
       if (feature) {
         const p = feature.properties;
@@ -1761,6 +1990,7 @@
       fecharFiltro();
       preencherDataHoje();
       resetarFotos();
+      pontoSendoColetadoId = null;
       document.getElementById("campo-ponto").value = "Coleta Manual de Campo";
       document.getElementById("campo-ponto-id").value = "outro_novo";
       document.getElementById("campo-fa").value = "";
@@ -1875,6 +2105,7 @@
         // Salvar cópia local no navegador como garantia
         const historico = JSON.parse(localStorage.getItem("coletas_historico") || "[]");
         historico.push({
+          pontoId: pontoSendoColetadoId,
           ponto: pontoTexto,
           fa: fa,
           data: dataColeta,
@@ -1891,8 +2122,30 @@
         showToast(`✅ Coleta enviada com sucesso às ${horaLancamento}!`, "success");
         fecharFormulario();
 
-        // Destacar ponto no mapa como coletado (verde)
-        if (lat && lon) {
+        // Atualizar marcador existente da armadilha para VERDE com ícone de mosca e check
+        if (pontoSendoColetadoId && pontosLayersMap[pontoSendoColetadoId]) {
+          const layer = pontosLayersMap[pontoSendoColetadoId];
+          const pProps = layer.pontoProperties || listaPontosCache.find(x => x.id === pontoSendoColetadoId) || {};
+          pProps.coletado = true;
+          pProps.data_coleta = dataColeta;
+          pProps.hora_coleta = horaLancamento;
+          pProps.pressao = pressao;
+          pProps.matricula = matricula;
+
+          const statusAtualizado = {
+            coletado: true,
+            data: dataColeta,
+            hora: horaLancamento,
+            pressao: pressao,
+            matricula: matricula
+          };
+          layer.setIcon(criarIconeArmadilha(pProps.armadilha, true));
+          layer.setPopupContent(gerarConteudoPopup(pProps, statusAtualizado));
+          layer.openPopup();
+          if (pProps.lat && pProps.lon) {
+            map.flyTo([pProps.lat, pProps.lon], 16, { duration: 0.8 });
+          }
+        } else if (lat && lon) {
           const latVal = parseFloat(lat);
           const lonVal = parseFloat(lon);
           const popupContent = `
